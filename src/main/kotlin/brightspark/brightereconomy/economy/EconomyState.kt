@@ -88,6 +88,14 @@ class EconomyState : PersistentState {
 		accounts.compute(uuid) { _, account ->
 			account?.copy(locked = true) ?: PlayerAccount(uuid = uuid, locked = true)
 		}
+		LOG.atInfo().setMessage("Locked account {}").addArgument(uuid).log()
+	}
+
+	fun unlockAccount(uuid: UUID) {
+		accounts.compute(uuid) { _, account ->
+			account?.copy(locked = true) ?: PlayerAccount(uuid = uuid, locked = true)
+		}
+		LOG.atInfo().setMessage("Unlocked account {}").addArgument(uuid).log()
 	}
 
 	private fun readNbt(nbt: NbtCompound) {
