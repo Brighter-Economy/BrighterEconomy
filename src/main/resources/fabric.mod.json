@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "brightereconomy",
+	"version": "${version}",
+	"name": "Brighter Economy",
+	"description": "A brighter economy for everyone!",
+	"authors": [
+		"bright_spark",
+		"CasualCynic",
+		"ChrissQuartz"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "GNU GPLv3",
+	"icon": "assets/brightereconomy/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			{
+				"value": "brightspark.brightereconomy.BrighterEconomy",
+				"adapter": "kotlin"
+			}
+		]
+	},
+	"mixins": [
+		"brightereconomy.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.15.7",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*",
+		"fabric-language-kotlin": ">=1.9.22"
+	},
+	"suggests": {}
+}
