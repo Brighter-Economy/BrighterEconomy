@@ -7,13 +7,10 @@ import net.minecraft.nbt.NbtList
 import net.minecraft.server.MinecraftServer
 import net.minecraft.world.PersistentState
 import net.minecraft.world.World
-import org.slf4j.LoggerFactory
 import java.util.*
 
 class EconomyState : PersistentState {
 	companion object {
-		private val LOG = LoggerFactory.getLogger(EconomyState::class.java)
-
 		fun get(server: MinecraftServer): EconomyState {
 			val manager = server.getWorld(World.OVERWORLD)!!.persistentStateManager
 			val state = manager.getOrCreate(::EconomyState, ::EconomyState, BrighterEconomy.MOD_ID)
@@ -38,7 +35,7 @@ class EconomyState : PersistentState {
 	fun getTransactions(uuid: UUID): List<Transaction> = transactions[uuid] ?: emptyList()
 
 	fun exchange(uuidFrom: UUID, uuidTo: UUID, money: Long): Pair<TransactionExchangeResult, Transaction?> {
-		LOG.atInfo()
+		BrighterEconomy.LOG.atInfo()
 			.setMessage("Attempting to exchange {} from {} to {}")
 			.addArgument(money).addArgument(uuidFrom).addArgument(uuidTo)
 			.log()
@@ -51,7 +48,7 @@ class EconomyState : PersistentState {
 
 		accounts[uuidFrom] = from.copy(money = from.money - money)
 		accounts[uuidTo] = to.copy(money = to.money + money)
-		LOG.atInfo()
+		BrighterEconomy.LOG.atInfo()
 			.setMessage("Exchange success {} from {} to {}")
 			.addArgument(money).addArgument(uuidFrom).addArgument(uuidTo)
 			.log()
@@ -60,22 +57,22 @@ class EconomyState : PersistentState {
 
 	private fun validateExchange(from: PlayerAccount, to: PlayerAccount, money: Long): TransactionExchangeResult {
 		if (from.locked) {
-			LOG.atWarn().setMessage("Exchange failed due to {} locked").addArgument(from.uuid).log()
+			BrighterEconomy.LOG.atWarn().setMessage("Exchange failed due to {} locked").addArgument(from.uuid).log()
 			return TransactionExchangeResult.FROM_LOCKED
 		}
 		if (to.locked) {
-			LOG.atWarn().setMessage("Exchange failed due to {} locked").addArgument(to.uuid).log()
+			BrighterEconomy.LOG.atWarn().setMessage("Exchange failed due to {} locked").addArgument(to.uuid).log()
 			return TransactionExchangeResult.TO_LOCKED
 		}
 		if (from.money < money) {
-			LOG.atWarn()
+			BrighterEconomy.LOG.atWarn()
 				.setMessage("Exchange failed due to {} insufficient money ({})")
 				.addArgument(from.uuid).addArgument(from.money)
 				.log()
 			return TransactionExchangeResult.INSUFFICIENT_MONEY
 		}
 		if (Long.MAX_VALUE - to.money < money) {
-			LOG.atWarn()
+			BrighterEconomy.LOG.atWarn()
 				.setMessage("Exchange failed due to {} overflow money ({})")
 				.addArgument(to.uuid).addArgument(to.money)
 				.log()
@@ -88,14 +85,14 @@ class EconomyState : PersistentState {
 		accounts.compute(uuid) { _, account ->
 			account?.copy(locked = true) ?: PlayerAccount(uuid = uuid, locked = true)
 		}
-		LOG.atInfo().setMessage("Locked account {}").addArgument(uuid).log()
+		BrighterEconomy.LOG.atInfo().setMessage("Locked account {}").addArgument(uuid).log()
 	}
 
 	fun unlockAccount(uuid: UUID) {
 		accounts.compute(uuid) { _, account ->
 			account?.copy(locked = true) ?: PlayerAccount(uuid = uuid, locked = true)
 		}
-		LOG.atInfo().setMessage("Unlocked account {}").addArgument(uuid).log()
+		BrighterEconomy.LOG.atInfo().setMessage("Unlocked account {}").addArgument(uuid).log()
 	}
 
 	private fun readNbt(nbt: NbtCompound) {
