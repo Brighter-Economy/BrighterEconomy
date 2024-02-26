@@ -1,7 +1,19 @@
 {
 	"variants": {
-		"": {
+		"facing=east": {
+			"model": "brightereconomy:block/server_shop",
+			"y": 90
+		},
+		"facing=north": {
 			"model": "brightereconomy:block/server_shop"
+		},
+		"facing=south": {
+			"model": "brightereconomy:block/server_shop",
+			"y": 180
+		},
+		"facing=west": {
+			"model": "brightereconomy:block/server_shop",
+			"y": 270
 		}
 	}
 }
