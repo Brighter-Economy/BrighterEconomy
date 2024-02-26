@@ -1,0 +1,23 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		"GGG",
+		"WDW",
+		"W W"
+	],
+	"key": {
+		"G": {
+			"item": "minecraft:gold_nugget"
+		},
+		"D": {
+			"tag": "minecraft:diamond"
+		},
+		"W": {
+			"tag": "minecraft:logs"
+		}
+	},
+	"result": {
+		"item": "brightereconomy:player_shop",
+		"count": 1
+	}
+}
