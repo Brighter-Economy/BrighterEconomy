@@ -11,6 +11,8 @@ import java.util.*
 
 class EconomyState : PersistentState {
 	companion object {
+		fun get(): Optional<EconomyState> = BrighterEconomy.SERVER.map { get(it) }
+
 		fun get(server: MinecraftServer): EconomyState {
 			val manager = server.getWorld(World.OVERWORLD)!!.persistentStateManager
 			val state = manager.getOrCreate(::EconomyState, ::EconomyState, BrighterEconomy.MOD_ID)
@@ -28,11 +30,17 @@ class EconomyState : PersistentState {
 		readNbt(nbt)
 	}
 
-	private fun getAccount(uuid: UUID): PlayerAccount = accounts.getOrPut(uuid) { PlayerAccount(uuid) }
+	fun getAccountUuids(): Set<UUID> = accounts.keys
+
+	fun getAccounts(): Collection<PlayerAccount> = accounts.values
+
+	fun getAccount(uuid: UUID): PlayerAccount = accounts.getOrPut(uuid) { PlayerAccount(uuid) }
 
 	fun getMoney(uuid: UUID): Long = accounts[uuid]?.money ?: 0
 
-	fun getTransactions(uuid: UUID): List<Transaction> = transactions[uuid] ?: emptyList()
+	fun getTransactions(): List<Transaction> = transactions.values.flatten()
+
+	fun getAccountTransactions(uuid: UUID): List<Transaction> = transactions[uuid] ?: emptyList()
 
 	fun exchange(uuidFrom: UUID, uuidTo: UUID, money: Long): Pair<TransactionExchangeResult, Transaction?> {
 		BrighterEconomy.LOG.atInfo()

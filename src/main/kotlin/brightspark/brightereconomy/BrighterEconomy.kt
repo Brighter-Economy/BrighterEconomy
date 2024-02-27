@@ -2,7 +2,9 @@ package brightspark.brightereconomy
 
 import brightspark.brightereconomy.blocks.ShopBlock
 import brightspark.brightereconomy.blocks.ShopBlockEntity
+import brightspark.brightereconomy.rest.ApiController
 import net.fabricmc.api.ModInitializer
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
 import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
 import net.minecraft.block.AbstractBlock
@@ -17,20 +19,31 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
+import net.minecraft.server.MinecraftServer
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.*
 
 object BrighterEconomy : ModInitializer {
 	const val MOD_ID = "brightereconomy"
 	val LOG: Logger = LoggerFactory.getLogger(MOD_ID)
+//	val CONFIG = ModConfig.createAndLoad()
+
+	var SERVER: Optional<MinecraftServer> = Optional.empty()
+		private set
 
 	lateinit var PLAYER_SHOP_BLOCK: ShopBlock
 	lateinit var SERVER_SHOP_BLOCK: ShopBlock
 	lateinit var SHOP_BLOCK_ENTITY: BlockEntityType<ShopBlockEntity>
 
 	override fun onInitialize() {
+		ServerLifecycleEvents.SERVER_STARTING.register { SERVER = Optional.of(it) }
+		ServerLifecycleEvents.SERVER_STARTED.register { ApiController.init() }
+		ServerLifecycleEvents.SERVER_STOPPING.register { ApiController.shutdown() }
+		ServerLifecycleEvents.SERVER_STOPPED.register { SERVER = Optional.empty() }
+
 		val shopBlockSettings = AbstractBlock.Settings.create().nonOpaque().allowsSpawning(Blocks::never)
 		PLAYER_SHOP_BLOCK = regBlock(
 			"player_shop",
