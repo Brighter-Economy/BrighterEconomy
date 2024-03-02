@@ -16,8 +16,7 @@ object ApiController {
 	private var engine: Optional<NettyApplicationEngine> = Optional.empty()
 
 	fun init() {
-		// TODO: Make config for if API is enabled
-		if (engine.isPresent) return
+		if (!BrighterEconomy.CONFIG.apiEnabled() || engine.isPresent) return
 		BrighterEconomy.LOG.atInfo().setMessage("Starting REST server").log()
 		engine = Optional.of(create())
 	}
@@ -30,8 +29,7 @@ object ApiController {
 	}
 
 	private fun create(): NettyApplicationEngine =
-		// TODO: Make port configurable
-		embeddedServer(Netty, port = 25570) {
+		embeddedServer(Netty, port = BrighterEconomy.CONFIG.apiPort()) {
 			install(ContentNegotiation) { json() }
 			routes()
 		}.start()
