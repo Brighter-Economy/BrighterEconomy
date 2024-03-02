@@ -2,8 +2,10 @@ package brightspark.brightereconomy
 
 import brightspark.brightereconomy.blocks.ShopBlock
 import brightspark.brightereconomy.blocks.ShopBlockEntity
+import brightspark.brightereconomy.commands.BaseCommand
 import brightspark.brightereconomy.rest.ApiController
 import net.fabricmc.api.ModInitializer
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
 import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
@@ -29,7 +31,7 @@ import java.util.*
 object BrighterEconomy : ModInitializer {
 	const val MOD_ID = "brightereconomy"
 	val LOG: Logger = LoggerFactory.getLogger(MOD_ID)
-//	val CONFIG = ModConfig.createAndLoad()
+	val CONFIG = ModConfig.createAndLoad()
 
 	var SERVER: Optional<MinecraftServer> = Optional.empty()
 		private set
@@ -39,11 +41,16 @@ object BrighterEconomy : ModInitializer {
 	lateinit var SHOP_BLOCK_ENTITY: BlockEntityType<ShopBlockEntity>
 
 	override fun onInitialize() {
+		// Events
 		ServerLifecycleEvents.SERVER_STARTING.register { SERVER = Optional.of(it) }
 		ServerLifecycleEvents.SERVER_STARTED.register { ApiController.init() }
 		ServerLifecycleEvents.SERVER_STOPPING.register { ApiController.shutdown() }
 		ServerLifecycleEvents.SERVER_STOPPED.register { SERVER = Optional.empty() }
 
+		// Commands
+		CommandRegistrationCallback.EVENT.register { dispatcher, _, _ -> dispatcher.register(BaseCommand.builder) }
+
+		// Blocks
 		val shopBlockSettings = AbstractBlock.Settings.create().nonOpaque().allowsSpawning(Blocks::never)
 		PLAYER_SHOP_BLOCK = regBlock(
 			"player_shop",
@@ -55,12 +62,14 @@ object BrighterEconomy : ModInitializer {
 		)
 		SHOP_BLOCK_ENTITY = regBlockEntity("shop", ::ShopBlockEntity, PLAYER_SHOP_BLOCK, SERVER_SHOP_BLOCK)
 
+		// Block Items
 		val playerShopBlockItem = regBlockItem("player_shop", PLAYER_SHOP_BLOCK)
 		val serverShopBlockItem = regBlockItem("server_shop", SERVER_SHOP_BLOCK)
 
+		// Item Group
 		Registry.register(
 			Registries.ITEM_GROUP,
-			Identifier(MOD_ID, "group"),
+			id("group"),
 			FabricItemGroup.builder()
 				.icon { ItemStack(Items.GOLD_INGOT) }
 				.displayName(Text.translatable("itemGroup.brightereconomy.group"))
@@ -74,8 +83,10 @@ object BrighterEconomy : ModInitializer {
 		)
 	}
 
+	private fun id(name: String): Identifier = Identifier.of(MOD_ID, name)!!
+
 	private fun <T : Block> regBlock(name: String, block: T): T =
-		Registry.register(Registries.BLOCK, Identifier.of(MOD_ID, name), block)
+		Registry.register(Registries.BLOCK, id(name), block)
 
 	private fun <T : BlockEntity> regBlockEntity(
 		name: String,
@@ -83,12 +94,12 @@ object BrighterEconomy : ModInitializer {
 		vararg blocks: Block
 	): BlockEntityType<T> = Registry.register(
 		Registries.BLOCK_ENTITY_TYPE,
-		Identifier.of(MOD_ID, name),
+		id(name),
 		FabricBlockEntityTypeBuilder.create(factory, *blocks).build()
 	)
 
 	private fun <T : Item> regItem(name: String, item: T): T =
-		Registry.register(Registries.ITEM, Identifier(MOD_ID, name), item)
+		Registry.register(Registries.ITEM, id(name), item)
 
 	private fun regBlockItem(name: String, block: Block): BlockItem = regItem(name, BlockItem(block, Settings()))
 }

@@ -1,8 +1,9 @@
 plugins {
     id 'fabric-loom' version '1.5-SNAPSHOT'
     id 'maven-publish'
-    id "org.jetbrains.kotlin.jvm" version "1.9.22"
+    id 'org.jetbrains.kotlin.jvm' version '1.9.22'
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.9.22'
+    id 'org.jetbrains.kotlin.kapt' version '1.9.22'
 }
 
 version = project.mod_version
@@ -15,6 +16,8 @@ base {
 repositories {
     // owo lib
     maven { url 'https://maven.wispforest.io' }
+    // fabric permissions api
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
 }
 
 dependencies {
@@ -29,7 +32,9 @@ dependencies {
 
     modImplementation "io.wispforest:owo-lib:${project.owo_version}"
     include "io.wispforest:owo-sentinel:${project.owo_version}"
-    annotationProcessor modImplementation("io.wispforest:owo-lib:${project.owo_version}")
+    kapt modImplementation("io.wispforest:owo-lib:${project.owo_version}")
+
+    modImplementation 'me.lucko:fabric-permissions-api:0.2-SNAPSHOT'
 
     implementation "io.ktor:ktor-server-netty:${project.ktor_version}"
     implementation "io.ktor:ktor-server-content-negotiation:${project.ktor_version}"

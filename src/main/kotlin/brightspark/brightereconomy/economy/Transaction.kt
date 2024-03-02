@@ -10,8 +10,8 @@ import java.util.*
 
 @Serializable
 data class Transaction(
-	val uuidFrom: UUID,
-	val uuidTo: UUID,
+	val uuidFrom: UUID?,
+	val uuidTo: UUID?,
 	val money: Long,
 	val timestamp: Long = System.currentTimeMillis()
 ) {

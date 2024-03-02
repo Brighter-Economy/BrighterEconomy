@@ -42,50 +42,54 @@ class EconomyState : PersistentState {
 
 	fun getAccountTransactions(uuid: UUID): List<Transaction> = transactions[uuid] ?: emptyList()
 
-	fun exchange(uuidFrom: UUID, uuidTo: UUID, money: Long): Pair<TransactionExchangeResult, Transaction?> {
+	fun exchange(uuidFrom: UUID?, uuidTo: UUID?, money: Long, initiatorName: String): TransactionExchangeResult {
+		if (uuidFrom == null && uuidTo == null)
+			throw IllegalArgumentException("")
+
 		BrighterEconomy.LOG.atInfo()
-			.setMessage("Attempting to exchange {} from {} to {}")
-			.addArgument(money).addArgument(uuidFrom).addArgument(uuidTo)
+			.setMessage("Attempting to exchange {} from {} to {} initiated by {}")
+			.addArgument(money).addArgument(uuidFrom).addArgument(uuidTo).addArgument(initiatorName)
 			.log()
 
-		val from = getAccount(uuidFrom)
-		val to = getAccount(uuidTo)
+		val from = uuidFrom?.let { getAccount(it) }
+		val to = uuidTo?.let { getAccount(it) }
 		val result = validateExchange(from, to, money)
 		if (result != TransactionExchangeResult.SUCCESS)
-			return result to null
+			return result
 
-		accounts[uuidFrom] = from.copy(money = from.money - money)
-		accounts[uuidTo] = to.copy(money = to.money + money)
+		from?.let { accounts[it.uuid] = it.copy(money = it.money - money) }
+		to?.let { accounts[it.uuid] = it.copy(money = it.money + money) }
 		BrighterEconomy.LOG.atInfo()
-			.setMessage("Exchange success {} from {} to {}")
-			.addArgument(money).addArgument(uuidFrom).addArgument(uuidTo)
+			.setMessage("Exchange success {} from {} to {} initiated by {}")
+			.addArgument(money).addArgument(uuidFrom).addArgument(uuidTo).addArgument(initiatorName)
 			.log()
-		return TransactionExchangeResult.SUCCESS to Transaction(uuidFrom, uuidTo, money)
+		return TransactionExchangeResult.SUCCESS
 	}
 
-	private fun validateExchange(from: PlayerAccount, to: PlayerAccount, money: Long): TransactionExchangeResult {
-		if (from.locked) {
-			BrighterEconomy.LOG.atWarn().setMessage("Exchange failed due to {} locked").addArgument(from.uuid).log()
+	private fun validateExchange(from: PlayerAccount?, to: PlayerAccount?, money: Long): TransactionExchangeResult {
+		from?.takeIf { it.locked }?.let {
+			BrighterEconomy.LOG.atWarn().setMessage("Exchange failed due to {} locked").addArgument(it.uuid).log()
 			return TransactionExchangeResult.FROM_LOCKED
 		}
-		if (to.locked) {
-			BrighterEconomy.LOG.atWarn().setMessage("Exchange failed due to {} locked").addArgument(to.uuid).log()
+		to?.takeIf { it.locked }?.let {
+			BrighterEconomy.LOG.atWarn().setMessage("Exchange failed due to {} locked").addArgument(it.uuid).log()
 			return TransactionExchangeResult.TO_LOCKED
 		}
-		if (from.money < money) {
+		from?.takeIf { it.money < money }?.let {
 			BrighterEconomy.LOG.atWarn()
 				.setMessage("Exchange failed due to {} insufficient money ({})")
-				.addArgument(from.uuid).addArgument(from.money)
+				.addArgument(it.uuid).addArgument(it.money)
 				.log()
 			return TransactionExchangeResult.INSUFFICIENT_MONEY
 		}
-		if (Long.MAX_VALUE - to.money < money) {
+		to?.takeIf { Long.MAX_VALUE - it.money < money }?.let {
 			BrighterEconomy.LOG.atWarn()
 				.setMessage("Exchange failed due to {} overflow money ({})")
-				.addArgument(to.uuid).addArgument(to.money)
+				.addArgument(it.uuid).addArgument(it.money)
 				.log()
 			return TransactionExchangeResult.OVERFLOW_MONEY
 		}
+
 		return TransactionExchangeResult.SUCCESS
 	}
 
