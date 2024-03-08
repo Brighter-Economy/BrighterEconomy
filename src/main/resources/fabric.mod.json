@@ -22,6 +22,12 @@
 				"value": "brightspark.brightereconomy.BrighterEconomy",
 				"adapter": "kotlin"
 			}
+		],
+		"client": [
+			{
+				"value": "brightspark.brightereconomy.BrighterEconomyClient",
+				"adapter": "kotlin"
+			}
 		]
 	},
 	"mixins": [

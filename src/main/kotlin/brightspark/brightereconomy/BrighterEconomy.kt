@@ -4,6 +4,7 @@ import brightspark.brightereconomy.blocks.ShopBlock
 import brightspark.brightereconomy.blocks.ShopBlockEntity
 import brightspark.brightereconomy.commands.BaseCommand
 import brightspark.brightereconomy.rest.ApiController
+import brightspark.brightereconomy.screen.ShopScreenHandler
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
@@ -21,6 +22,9 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
+import net.minecraft.resource.featuretoggle.FeatureFlags
+import net.minecraft.screen.ScreenHandler
+import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.server.MinecraftServer
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
@@ -39,6 +43,7 @@ object BrighterEconomy : ModInitializer {
 	lateinit var PLAYER_SHOP_BLOCK: ShopBlock
 	lateinit var SERVER_SHOP_BLOCK: ShopBlock
 	lateinit var SHOP_BLOCK_ENTITY: BlockEntityType<ShopBlockEntity>
+	lateinit var SHOP_SCREEN_HANDLER: ScreenHandlerType<ShopScreenHandler>
 
 	override fun onInitialize() {
 		// Events
@@ -81,6 +86,9 @@ object BrighterEconomy : ModInitializer {
 				}
 				.build()
 		)
+
+		// Screens
+		SHOP_SCREEN_HANDLER = regScreenHandler("shop", ::ShopScreenHandler)
 	}
 
 	private fun id(name: String): Identifier = Identifier.of(MOD_ID, name)!!
@@ -101,5 +109,15 @@ object BrighterEconomy : ModInitializer {
 	private fun <T : Item> regItem(name: String, item: T): T =
 		Registry.register(Registries.ITEM, id(name), item)
 
-	private fun regBlockItem(name: String, block: Block): BlockItem = regItem(name, BlockItem(block, Settings()))
+	private fun regBlockItem(name: String, block: Block): BlockItem =
+		regItem(name, BlockItem(block, Settings()))
+
+	private fun <T : ScreenHandler> regScreenHandler(
+		name: String,
+		factory: ScreenHandlerType.Factory<T>
+	): ScreenHandlerType<T> = Registry.register(
+		Registries.SCREEN_HANDLER,
+		id(name),
+		ScreenHandlerType(factory, FeatureFlags.VANILLA_FEATURES)
+	)
 }
