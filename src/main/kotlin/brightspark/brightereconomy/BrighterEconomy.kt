@@ -48,7 +48,7 @@ object BrighterEconomy : ModInitializer {
 		ServerLifecycleEvents.SERVER_STOPPED.register { SERVER = Optional.empty() }
 
 		// Commands
-		CommandRegistrationCallback.EVENT.register { dispatcher, _, _ -> dispatcher.register(BaseCommand.builder) }
+		CommandRegistrationCallback.EVENT.register { dispatcher, _, _ -> BaseCommand.register(dispatcher) }
 
 		// Blocks
 		val shopBlockSettings = AbstractBlock.Settings.create().nonOpaque().allowsSpawning(Blocks::never)

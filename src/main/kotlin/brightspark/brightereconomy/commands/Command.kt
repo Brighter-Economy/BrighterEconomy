@@ -27,7 +27,7 @@ abstract class Command(
 		 *
 		 * [Brigadier issue](https://github.com/Mojang/brigadier/issues/46)
 		 */
-		private fun buildRedirect(
+		fun buildRedirect(
 			alias: String,
 			destination: LiteralCommandNode<ServerCommandSource>
 		): LiteralCommandNode<ServerCommandSource> =
@@ -63,7 +63,7 @@ abstract class Command(
 			EconomyState.get(this.source.server)
 	}
 
-	private val aliases: MutableList<String> = mutableListOf()
+	protected val aliases: MutableList<String> = mutableListOf()
 
 	val builder: LiteralArgumentBuilder<ServerCommandSource> = CommandManager.literal(name).apply(builderBlock)
 
