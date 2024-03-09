@@ -5,7 +5,6 @@ import net.minecraft.server.command.ServerCommandSource
 
 object BaseCommand : Command("brightereconomy", {
 	thenCommand(BalanceCommand)
-	thenCommand(ModifyBalanceCommand)
 }) {
 	init {
 		aliases("be")

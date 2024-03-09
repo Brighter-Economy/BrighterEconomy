@@ -38,10 +38,23 @@ class EconomyState : PersistentState {
 
 	fun getMoney(uuid: UUID): Long = accounts[uuid]?.money ?: 0
 
+	fun setMoney(uuid: UUID, money: Long, initiatorName: String? = null) {
+		getAccount(uuid).let {
+			accounts[uuid] = it.copy(money = money)
+		}
+		initiatorName?.let {
+			BrighterEconomy.LOG.atInfo()
+				.setMessage("Money set success {} to {} initiated by {}")
+				.addArgument(uuid).addArgument(money).addArgument(initiatorName)
+				.log()
+		}
+	}
+
 	fun getTransactions(): List<Transaction> = transactions.values.flatten()
 
 	fun getAccountTransactions(uuid: UUID): List<Transaction> = transactions[uuid] ?: emptyList()
 
+	// TODO: Add itemExchange function
 	fun exchange(uuidFrom: UUID?, uuidTo: UUID?, money: Long, initiatorName: String): TransactionExchangeResult {
 		if (uuidFrom == null && uuidTo == null)
 			throw IllegalArgumentException("")
@@ -57,8 +70,8 @@ class EconomyState : PersistentState {
 		if (result != TransactionExchangeResult.SUCCESS)
 			return result
 
-		from?.let { accounts[it.uuid] = it.copy(money = it.money - money) }
-		to?.let { accounts[it.uuid] = it.copy(money = it.money + money) }
+		from?.let { setMoney(it.uuid, it.money - money) }
+		to?.let { setMoney(it.uuid, it.money + money) }
 		BrighterEconomy.LOG.atInfo()
 			.setMessage("Exchange success {} from {} to {} initiated by {}")
 			.addArgument(money).addArgument(uuidFrom).addArgument(uuidTo).addArgument(initiatorName)
