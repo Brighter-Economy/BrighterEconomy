@@ -1,13 +1,18 @@
 package brightspark.brightereconomy.commands
 
+import brightspark.brightereconomy.BrighterEconomy
 import com.mojang.brigadier.CommandDispatcher
 import net.minecraft.server.command.ServerCommandSource
 
-object BaseCommand : Command("brightereconomy", {
+object BaseCommand : Command(BrighterEconomy.MOD_ID, {
+	requiresPermission(0)
+
 	thenCommand(BalanceCommand)
 }) {
 	init {
-		aliases("be")
+		BrighterEconomy.CONFIG.commandAliases().asSequence()
+			.filter { it.isNotBlank() }
+			.forEach { alias(it) }
 	}
 
 	fun register(dispatcher: CommandDispatcher<ServerCommandSource>) {

@@ -17,8 +17,7 @@ abstract class Command(
 	builderBlock: LiteralArgumentBuilder<ServerCommandSource>.() -> Unit
 ) {
 	companion object {
-		private const val COMMAND_PERM = "command.${BrighterEconomy.MOD_ID}."
-		private const val DEFAULT_PERM_LEVEL = 2
+		private const val COMMAND_PERM = "command.${BrighterEconomy.MOD_ID}"
 
 		/**
 		 * Returns a literal node that redirects its execution to the given [destination] node.
@@ -55,9 +54,11 @@ abstract class Command(
 			command.aliases.forEach { this.then(buildRedirect(it, node)) }
 		}
 
-		fun <T : ArgumentBuilder<ServerCommandSource, T>> T.requiresPermission(permission: String) {
-			this.requires(Permissions.require(COMMAND_PERM + permission, DEFAULT_PERM_LEVEL))
-		}
+		fun <T : ArgumentBuilder<ServerCommandSource, T>> T.requiresPermission(level: Int): T =
+			this.requires(Permissions.require(COMMAND_PERM, level))
+
+		fun <T : ArgumentBuilder<ServerCommandSource, T>> T.requiresPermission(permission: String, level: Int): T =
+			this.requires(Permissions.require("$COMMAND_PERM.$permission", level))
 
 		fun CommandContext<ServerCommandSource>.getEconomyState(): EconomyState =
 			EconomyState.get(this.source.server)
@@ -66,6 +67,10 @@ abstract class Command(
 	protected val aliases: MutableList<String> = mutableListOf()
 
 	val builder: LiteralArgumentBuilder<ServerCommandSource> = CommandManager.literal(name).apply(builderBlock)
+
+	protected fun alias(alias: String) {
+		this.aliases.add(alias)
+	}
 
 	protected fun aliases(vararg aliases: String): Unit = aliases.forEach { this.aliases.add(it) }
 }

@@ -10,9 +10,13 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 
 object BalanceCommand : Command("balance", {
+	requiresPermission("balance", 0)
+
 	executes { ctx -> BalanceCommand.balance(ctx) }
 
 	thenArgument("player", GameProfileArgumentType.gameProfile()) {
+		requiresPermission("player", 2)
+
 		executes { ctx ->
 			val player = BalanceCommand.getPlayer(ctx) ?: return@executes 0
 			BalanceCommand.balance(ctx, player)
