@@ -76,17 +76,18 @@ object BalanceCommand : Command("balance", {
 			ctx.source.name
 		)
 
+		val amountFormatted = Util.formatMoney(amount)
 		return if (result == TransactionExchangeResult.SUCCESS) {
 			if (add)
-				ctx.source.sendMessage(Text.of("Added $amount to ${player.name}"))
+				ctx.source.sendMessage(Text.of("Added $amountFormatted to ${player.name}"))
 			else
-				ctx.source.sendMessage(Text.of("Removed $amount from ${player.name}"))
+				ctx.source.sendMessage(Text.of("Removed $amountFormatted from ${player.name}"))
 			1
 		} else {
 			if (add)
-				ctx.source.sendMessage(Text.of("Failed to add $amount to ${player.name} due to $result"))
+				ctx.source.sendMessage(Text.of("Failed to add $amountFormatted to ${player.name} due to $result"))
 			else
-				ctx.source.sendMessage(Text.of("Failed to remove $amount from ${player.name} due to $result"))
+				ctx.source.sendMessage(Text.of("Failed to remove $amountFormatted from ${player.name} due to $result"))
 			0
 		}
 	}
@@ -98,7 +99,7 @@ object BalanceCommand : Command("balance", {
 		}
 		val amount = LongArgumentType.getLong(ctx, "amount")
 		ctx.getEconomyState().setMoney(player.id, amount, ctx.source.name)
-		ctx.source.sendMessage(Text.of("Set ${player.name} balance to $amount"))
+		ctx.source.sendMessage(Text.of("Set ${player.name} balance to ${Util.formatMoney(amount)}"))
 		return 1
 	}
 }
