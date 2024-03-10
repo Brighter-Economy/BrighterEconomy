@@ -22,6 +22,7 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 	var owner: UUID? = null
 	var cost: Int = 0
 	private var itemStackForSale: ItemStack = ItemStack.EMPTY
+	var linkedContainer: BlockPos? = null
 
 	override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
 		ShopScreenHandler(syncId, playerInventory)
@@ -49,10 +50,10 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 
 	override fun readNbt(nbt: NbtCompound) {
 		super.readNbt(nbt)
-		if (nbt.containsUuid("owner"))
-			owner = nbt.getUuid("owner")
+		owner = if (nbt.containsUuid("owner")) nbt.getUuid("owner") else null
 		cost = nbt.getInt("cost")
 		itemStackForSale = ItemStack.fromNbt(nbt.getCompound("stackForSale"))
+		linkedContainer = if (nbt.contains("container")) BlockPos.fromLong(nbt.getLong("container")) else null
 	}
 
 	override fun writeNbt(nbt: NbtCompound) {
@@ -60,5 +61,6 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 		owner?.let { nbt.putUuid("owner", it) }
 		nbt.putInt("cost", cost)
 		nbt.put("stackForSale", itemStackForSale.writeNbt(NbtCompound()))
+		linkedContainer?.let { nbt.putLong("container", it.asLong()) }
 	}
 }

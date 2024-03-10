@@ -3,6 +3,7 @@ package brightspark.brightereconomy
 import brightspark.brightereconomy.blocks.ShopBlock
 import brightspark.brightereconomy.blocks.ShopBlockEntity
 import brightspark.brightereconomy.commands.BaseCommand
+import brightspark.brightereconomy.items.ShopBlockItem
 import brightspark.brightereconomy.rest.ApiController
 import brightspark.brightereconomy.screen.ShopScreenHandler
 import net.fabricmc.api.ModInitializer
@@ -68,8 +69,8 @@ object BrighterEconomy : ModInitializer {
 		SHOP_BLOCK_ENTITY = regBlockEntity("shop", ::ShopBlockEntity, PLAYER_SHOP_BLOCK, SERVER_SHOP_BLOCK)
 
 		// Block Items
-		val playerShopBlockItem = regBlockItem("player_shop", PLAYER_SHOP_BLOCK)
-		val serverShopBlockItem = regBlockItem("server_shop", SERVER_SHOP_BLOCK)
+		val playerShopBlockItem = regBlockItem("player_shop", PLAYER_SHOP_BLOCK, ::ShopBlockItem)
+		val serverShopBlockItem = regBlockItem("server_shop", SERVER_SHOP_BLOCK, ::ShopBlockItem)
 
 		// Item Group
 		Registry.register(
@@ -109,8 +110,11 @@ object BrighterEconomy : ModInitializer {
 	private fun <T : Item> regItem(name: String, item: T): T =
 		Registry.register(Registries.ITEM, id(name), item)
 
-	private fun regBlockItem(name: String, block: Block): BlockItem =
-		regItem(name, BlockItem(block, Settings()))
+	private fun regBlockItem(
+		name: String,
+		block: Block,
+		blockItem: (Block, Settings) -> BlockItem = ::BlockItem
+	): BlockItem = regItem(name, blockItem(block, Settings()))
 
 	private fun <T : ScreenHandler> regScreenHandler(
 		name: String,
