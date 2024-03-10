@@ -1,6 +1,7 @@
 package brightspark.brightereconomy.items
 
 import brightspark.brightereconomy.blocks.ShopBlockEntity
+import brightspark.brightereconomy.sendLiteralOverlayMessage
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.HopperBlockEntity
@@ -27,10 +28,7 @@ class ShopBlockItem(block: Block, settings: Settings) : BlockItem(block, setting
 		// Check has linked container
 		val hasContainer = context.stack.nbt?.contains(NBT_CONTAINER) ?: false
 		if (!hasContainer) {
-			context.player?.sendMessage(
-				Text.literal("No container linked!").styled { it.withColor(Formatting.RED) },
-				true
-			)
+			context.player?.sendLiteralOverlayMessage("No container linked!", Formatting.RED)
 		}
 		return hasContainer && super.canPlace(context, state)
 	}
@@ -45,7 +43,7 @@ class ShopBlockItem(block: Block, settings: Settings) : BlockItem(block, setting
 			if (inventory == null || inventory is Entity) return ActionResult.FAIL
 
 			context.stack.setSubNbt(NBT_CONTAINER, NbtLong.of(pos.asLong()))
-			context.player!!.sendMessage(Text.of("Shop container set to ${pos.toShortString()}"))
+			context.player!!.sendLiteralOverlayMessage("Shop container set to ${pos.toShortString()}")
 			return ActionResult.SUCCESS
 		}
 
@@ -68,7 +66,7 @@ class ShopBlockItem(block: Block, settings: Settings) : BlockItem(block, setting
 			?.let { be ->
 				be.owner = player?.uuid
 				stack.nbt?.getLong(NBT_CONTAINER)?.let { be.linkedContainer = BlockPos.fromLong(it) }
-				player?.sendMessage(Text.of("Set owner ${be.owner} and container ${be.linkedContainer?.toShortString()}"))
+				player?.sendLiteralOverlayMessage("Set owner ${be.owner} and container ${be.linkedContainer?.toShortString()}")
 			}
 
 		return result
@@ -79,6 +77,6 @@ class ShopBlockItem(block: Block, settings: Settings) : BlockItem(block, setting
 		val containerPos = stack.nbt?.getLong(NBT_CONTAINER)
 			?.let { BlockPos.fromLong(it).toShortString() }
 			?: "<none>"
-		tooltip.add(Text.of("Linked Container: $containerPos"))
+		tooltip.add(Text.literal("Linked Container: $containerPos").styled { it.withColor(Formatting.DARK_GRAY) })
 	}
 }
