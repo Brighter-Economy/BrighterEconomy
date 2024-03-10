@@ -66,7 +66,6 @@ class ShopBlockItem(block: Block, settings: Settings) : BlockItem(block, setting
 			?.let { be ->
 				be.owner = player?.uuid
 				stack.nbt?.getLong(NBT_CONTAINER)?.let { be.linkedContainer = BlockPos.fromLong(it) }
-				player?.sendLiteralOverlayMessage("Set owner ${be.owner} and container ${be.linkedContainer?.toShortString()}")
 			}
 
 		return result
