@@ -1,5 +1,6 @@
 package brightspark.brightereconomy.blocks
 
+import brightspark.brightereconomy.sendLiteralOverlayMessage
 import net.minecraft.block.Block
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
@@ -9,10 +10,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.Properties
-import net.minecraft.util.ActionResult
-import net.minecraft.util.BlockMirror
-import net.minecraft.util.BlockRotation
-import net.minecraft.util.Hand
+import net.minecraft.util.*
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
@@ -32,8 +30,14 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 		hand: Hand,
 		hit: BlockHitResult
 	): ActionResult {
-		if (!world.isClient())
-			player.openHandledScreen(state.createScreenHandlerFactory(world, pos))
+		if (!world.isClient()) {
+			world.getBlockEntity(pos)?.takeIf { it is ShopBlockEntity }?.let { be ->
+				if ((be as ShopBlockEntity).linkedContainer == null)
+					player.sendLiteralOverlayMessage("No container linked!", Formatting.RED)
+				else
+					player.openHandledScreen(state.createScreenHandlerFactory(world, pos))
+			}
+		}
 		return ActionResult.SUCCESS
 	}
 
