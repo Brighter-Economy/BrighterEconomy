@@ -1,6 +1,6 @@
 package brightspark.brightereconomy.blocks
 
-import brightspark.brightereconomy.sendLiteralOverlayMessage
+import brightspark.brightereconomy.util.sendLiteralOverlayMessage
 import net.minecraft.block.Block
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
@@ -31,11 +31,17 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 		hit: BlockHitResult
 	): ActionResult {
 		if (!world.isClient()) {
-			world.getBlockEntity(pos)?.takeIf { it is ShopBlockEntity }?.let { be ->
-				if ((be as ShopBlockEntity).linkedContainer == null)
+			world.getBlockEntity(pos)
+				?.takeIf { it is ShopBlockEntity }
+				?.let { it as ShopBlockEntity }
+				?.let { be ->
+					if (be.linkedContainer == BlockPos.ORIGIN)
 					player.sendLiteralOverlayMessage("No container linked!", Formatting.RED)
-				else
+					else if (be.owner == player.uuid)
 					player.openHandledScreen(state.createScreenHandlerFactory(world, pos))
+					else
+					// TODO: Open trade screen
+						player.openHandledScreen(state.createScreenHandlerFactory(world, pos))
 			}
 		}
 		return ActionResult.SUCCESS

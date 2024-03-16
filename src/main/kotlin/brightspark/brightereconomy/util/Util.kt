@@ -1,5 +1,6 @@
-package brightspark.brightereconomy
+package brightspark.brightereconomy.util
 
+import brightspark.brightereconomy.BrighterEconomy
 import java.text.NumberFormat
 
 object Util {

@@ -2,7 +2,9 @@ package brightspark.brightereconomy.screen
 
 import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.blocks.ShopBlockEntity
-import io.wispforest.owo.client.screens.OwoScreenHandler
+import brightspark.brightereconomy.network.SetShopDataPacket
+import brightspark.brightereconomy.util.Holder
+import brightspark.brightereconomy.util.property
 import io.wispforest.owo.client.screens.SyncedProperty
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -11,21 +13,30 @@ import net.minecraft.item.ItemStack
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.slot.Slot
 import net.minecraft.screen.slot.SlotActionType
-import kotlin.properties.ReadWriteProperty
-import kotlin.reflect.KProperty
+import net.minecraft.util.Util
+import java.util.*
 
 class ShopScreenHandler(
 	syncId: Int,
 	playerInventory: PlayerInventory,
 	shopBlockEntity: ShopBlockEntity? = null
 ) : ScreenHandler(BrighterEconomy.SHOP_SCREEN_HANDLER, syncId) {
-	var cost: Int by property(shopBlockEntity?.cost ?: 0)
+	private val beRef: Holder<ShopBlockEntity?> = Holder(shopBlockEntity)
+	private val ownerUuid: UUID = shopBlockEntity?.owner ?: Util.NIL_UUID
+	var cost: SyncedProperty<Int> = property(beRef, ShopBlockEntity::cost, 0)
 
 	init {
+		addServerboundMessage(SetShopDataPacket::class.java) {
+			if (player().uuid == ownerUuid) {
+				getShopStack().count = it.itemCount
+				cost.set(it.cost)
+			}
+		}
+
 		playerInventory.onOpen(playerInventory.player)
 
 		// Shop slot
-		addSlot(Slot(shopBlockEntity ?: SimpleInventory(1), 0, 29, 21))
+		addSlot(Slot(shopBlockEntity ?: SimpleInventory(1), 0, 39, 42))
 
 		// Player inventory slots
 		val invStartX = 8
@@ -73,12 +84,5 @@ class ShopScreenHandler(
 
 	override fun canUse(player: PlayerEntity): Boolean = true
 
-	inner class OwoPropertyDelegate<T>(private val owoProperty: SyncedProperty<T>) :
-		ReadWriteProperty<OwoScreenHandler, T> {
-		override fun getValue(thisRef: OwoScreenHandler, property: KProperty<*>): T = owoProperty.get()
-		override fun setValue(thisRef: OwoScreenHandler, property: KProperty<*>, value: T) = owoProperty.set(value)
-	}
-
-	private inline fun <reified T> property(initialValue: T): OwoPropertyDelegate<T> =
-		OwoPropertyDelegate(createProperty(T::class.java, initialValue))
+	fun sendData(cost: Int): Unit = sendMessage(SetShopDataPacket(getShopStack().count, cost))
 }

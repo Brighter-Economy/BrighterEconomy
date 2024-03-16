@@ -67,12 +67,20 @@ fun FlowLayout.button(text: Text, onPress: (ButtonComponent) -> Unit, block: But
 	this.child(Components.button(text, onPress).apply(block))
 }
 
+fun labelComponent(text: Text, block: LabelComponent.() -> Unit = {}): LabelComponent =
+	Components.label(text).apply(block)
+
 fun FlowLayout.label(text: Text, block: LabelComponent.() -> Unit = {}) {
-	this.child(Components.label(text).apply(block))
+	this.child(labelComponent(text, block))
 }
 
+fun textBoxComponent(
+	horizontalSizing: Sizing = Sizing.content(),
+	block: TextBoxComponent.() -> Unit = {}
+): TextBoxComponent = Components.textBox(horizontalSizing).apply(block)
+
 fun FlowLayout.textBox(horizontalSizing: Sizing = Sizing.content(), block: TextBoxComponent.() -> Unit = {}) {
-	this.child(Components.textBox(horizontalSizing).apply(block))
+	this.child(textBoxComponent(horizontalSizing, block))
 }
 
 fun FlowLayout.texture(texture: Identifier, width: Int, height: Int, block: TextureComponent.() -> Unit = {}) {

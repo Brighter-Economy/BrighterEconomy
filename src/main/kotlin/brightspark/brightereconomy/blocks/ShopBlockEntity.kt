@@ -13,19 +13,20 @@ import net.minecraft.nbt.NbtCompound
 import net.minecraft.screen.NamedScreenHandlerFactory
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.text.Text
+import net.minecraft.util.Util
 import net.minecraft.util.math.BlockPos
 import java.util.*
 
 class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEconomy.SHOP_BLOCK_ENTITY, pos, state),
 	NamedScreenHandlerFactory, SingleStackInventory {
 
-	var owner: UUID? = null
+	var owner: UUID = Util.NIL_UUID
 	var cost: Int = 0
 	private var itemStackForSale: ItemStack = ItemStack.EMPTY
-	var linkedContainer: BlockPos? = null
+	var linkedContainer: BlockPos = BlockPos.ORIGIN
 
 	override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-		ShopScreenHandler(syncId, playerInventory)
+		ShopScreenHandler(syncId, playerInventory, this)
 
 	override fun getDisplayName(): Text = Text.translatable(cachedState.block.translationKey)
 
@@ -50,17 +51,17 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 
 	override fun readNbt(nbt: NbtCompound) {
 		super.readNbt(nbt)
-		owner = if (nbt.containsUuid("owner")) nbt.getUuid("owner") else null
+		owner = nbt.getUuid("owner")
 		cost = nbt.getInt("cost")
 		itemStackForSale = ItemStack.fromNbt(nbt.getCompound("stackForSale"))
-		linkedContainer = if (nbt.contains("container")) BlockPos.fromLong(nbt.getLong("container")) else null
+		linkedContainer = BlockPos.fromLong(nbt.getLong("container"))
 	}
 
 	override fun writeNbt(nbt: NbtCompound) {
 		super.writeNbt(nbt)
-		owner?.let { nbt.putUuid("owner", it) }
+		nbt.putUuid("owner", owner)
 		nbt.putInt("cost", cost)
 		nbt.put("stackForSale", itemStackForSale.writeNbt(NbtCompound()))
-		linkedContainer?.let { nbt.putLong("container", it.asLong()) }
+		nbt.putLong("container", linkedContainer.asLong())
 	}
 }

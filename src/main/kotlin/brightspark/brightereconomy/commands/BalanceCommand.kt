@@ -1,7 +1,7 @@
 package brightspark.brightereconomy.commands
 
-import brightspark.brightereconomy.Util
 import brightspark.brightereconomy.economy.TransactionExchangeResult
+import brightspark.brightereconomy.util.Util
 import com.mojang.authlib.GameProfile
 import com.mojang.brigadier.arguments.LongArgumentType
 import com.mojang.brigadier.context.CommandContext

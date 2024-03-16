@@ -37,6 +37,7 @@ object BrighterEconomy : ModInitializer {
 	const val MOD_ID = "brightereconomy"
 	val LOG: Logger = LoggerFactory.getLogger(MOD_ID)
 	val CONFIG = ModConfig.createAndLoad()
+//	val NETWORK = OwoNetChannel.create(id("main"))
 
 	var SERVER: Optional<MinecraftServer> = Optional.empty()
 		private set
@@ -90,6 +91,9 @@ object BrighterEconomy : ModInitializer {
 
 		// Screens
 		SHOP_SCREEN_HANDLER = regScreenHandler("shop", ::ShopScreenHandler)
+
+		// Network
+//		NETWORK.registerServerbound(SetShopDataPacket::class.java, SetShopDataPacket::handle)
 	}
 
 	private fun id(name: String): Identifier = Identifier.of(MOD_ID, name)!!

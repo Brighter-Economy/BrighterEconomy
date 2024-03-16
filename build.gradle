@@ -30,10 +30,8 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
-    modImplementation "io.wispforest:owo-lib:${project.owo_version}"
-    include "io.wispforest:owo-sentinel:${project.owo_version}"
     kapt modImplementation("io.wispforest:owo-lib:${project.owo_version}")
-
+    include "io.wispforest:owo-sentinel:${project.owo_version}"
     modImplementation 'me.lucko:fabric-permissions-api:0.2-SNAPSHOT'
 
     implementation "io.ktor:ktor-server-netty:${project.ktor_version}"
