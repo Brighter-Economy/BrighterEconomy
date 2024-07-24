@@ -1,5 +1,6 @@
 package brightspark.brightereconomy.items
 
+import brightspark.brightereconomy.blocks.ShopBlock
 import brightspark.brightereconomy.blocks.ShopBlockEntity
 import brightspark.brightereconomy.util.sendLiteralOverlayMessage
 import net.minecraft.block.Block
@@ -39,6 +40,9 @@ class ShopBlockItem(block: Block, settings: Settings) : BlockItem(block, setting
 		if (context.player!!.isSneaking) {
 			// Set linked container to NBT
 			val pos = context.blockPos
+			val block = context.world.getBlockState(pos).block
+			if (block is ShopBlock) return ActionResult.FAIL
+
 			val inventory = HopperBlockEntity.getInventoryAt(context.world, pos)
 			if (inventory == null || inventory is Entity) return ActionResult.FAIL
 
