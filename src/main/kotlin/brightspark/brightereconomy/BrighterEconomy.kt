@@ -78,7 +78,7 @@ object BrighterEconomy : ModInitializer {
 			Registries.ITEM_GROUP,
 			id("group"),
 			FabricItemGroup.builder()
-				.icon { ItemStack(Items.GOLD_INGOT) }
+				.icon { ItemStack(PLAYER_SHOP_BLOCK) }
 				.displayName(Text.translatable("itemGroup.brightereconomy.group"))
 				.entries { _, entries ->
 					entries.apply {
