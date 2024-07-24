@@ -20,7 +20,6 @@ import net.minecraft.item.BlockItem
 import net.minecraft.item.Item
 import net.minecraft.item.Item.Settings
 import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
 import net.minecraft.resource.featuretoggle.FeatureFlags
@@ -78,7 +77,7 @@ object BrighterEconomy : ModInitializer {
 			Registries.ITEM_GROUP,
 			id("group"),
 			FabricItemGroup.builder()
-				.icon { ItemStack(Items.GOLD_INGOT) }
+				.icon { ItemStack(PLAYER_SHOP_BLOCK) }
 				.displayName(Text.translatable("itemGroup.brightereconomy.group"))
 				.entries { _, entries ->
 					entries.apply {
