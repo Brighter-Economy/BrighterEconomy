@@ -35,7 +35,7 @@ import java.util.*
 object BrighterEconomy : ModInitializer {
 	const val MOD_ID = "brightereconomy"
 	val LOG: Logger = LoggerFactory.getLogger(MOD_ID)
-	val CONFIG = ModConfig.createAndLoad()
+	val CONFIG: ModConfig = ModConfig.createAndLoad()
 //	val NETWORK = OwoNetChannel.create(id("main"))
 
 	var SERVER: Optional<MinecraftServer> = Optional.empty()

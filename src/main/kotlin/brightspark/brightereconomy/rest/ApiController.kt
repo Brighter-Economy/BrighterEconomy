@@ -10,6 +10,7 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import net.minecraft.util.UserCache
 import java.util.*
 
 object ApiController {
@@ -17,7 +18,9 @@ object ApiController {
 
 	fun init() {
 		if (!BrighterEconomy.CONFIG.apiEnabled() || engine.isPresent) return
-		BrighterEconomy.LOG.atInfo().setMessage("Starting REST server").log()
+		BrighterEconomy.LOG.atInfo()
+			.setMessage("Starting REST server on port ${BrighterEconomy.CONFIG.apiPort()}")
+			.log()
 		engine = Optional.of(create())
 	}
 
@@ -36,20 +39,32 @@ object ApiController {
 
 	private fun Application.routes() = routing {
 		route("/accounts") {
+			fun getUserCache(): Optional<UserCache> =
+				Optional.ofNullable(BrighterEconomy.SERVER.get().userCache)
+
+			fun Optional<UserCache>.getUsername(uuid: UUID): String =
+				this.flatMap { it.getByUuid(uuid) }.map { it.name }.orElse("")
+
 			get {
 				val state = EconomyState.get()
-				if (state.isPresent)
-					call.respond(state.get().getAccounts().toTypedArray())
-				else
+				if (state.isPresent) {
+					val userCache = getUserCache()
+					call.respond(
+						state.get().getAccounts().asSequence()
+							.map { it.toDto(userCache.getUsername(it.uuid)) }
+							.toList()
+					)
+				} else
 					call.respondText("MinecraftServer not available", status = HttpStatusCode.InternalServerError)
 			}
 			get("{uuid?}") {
 				val uuid = call.parameters["uuid"]?.let { UUID.fromString(it) }
 					?: return@get call.respondText("Missing UUID", status = HttpStatusCode.BadRequest)
 				val state = EconomyState.get()
-				if (state.isPresent)
-					call.respond(state.get().getAccount(uuid))
-				else
+				if (state.isPresent) {
+					val userCache = getUserCache()
+					call.respond(state.get().getAccount(uuid).toDto(userCache.getUsername(uuid)))
+				} else
 					call.respondText("MinecraftServer not available", status = HttpStatusCode.InternalServerError)
 			}
 		}
