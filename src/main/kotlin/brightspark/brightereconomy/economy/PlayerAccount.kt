@@ -4,6 +4,7 @@ package brightspark.brightereconomy.economy
 
 import brightspark.brightereconomy.rest.UuidSerializer
 import brightspark.brightereconomy.rest.dto.PlayerAccountDto
+import brightspark.brightereconomy.util.Util
 import io.wispforest.owo.network.serialization.PacketBufSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
@@ -51,5 +52,5 @@ data class PlayerAccount(
 	}
 
 	fun toDto(username: String): PlayerAccountDto =
-		PlayerAccountDto(uuid.toString(), username, locked, money)
+		PlayerAccountDto(uuid.toString(), username, locked, money, Util.formatMoney(money))
 }
