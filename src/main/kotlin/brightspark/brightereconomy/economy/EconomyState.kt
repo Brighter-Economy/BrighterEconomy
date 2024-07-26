@@ -106,17 +106,19 @@ class EconomyState : PersistentState {
 		return TransactionExchangeResult.SUCCESS
 	}
 
-	fun lockAccount(uuid: UUID) {
+	private fun setAccountLock(uuid: UUID, locked: Boolean) {
 		accounts.compute(uuid) { _, account ->
-			account?.copy(locked = true) ?: PlayerAccount(uuid = uuid, locked = true)
+			account?.copy(locked = locked) ?: PlayerAccount(uuid = uuid, locked = locked)
 		}
+	}
+
+	fun lockAccount(uuid: UUID) {
+		setAccountLock(uuid, true)
 		BrighterEconomy.LOG.atInfo().setMessage("Locked account {}").addArgument(uuid).log()
 	}
 
 	fun unlockAccount(uuid: UUID) {
-		accounts.compute(uuid) { _, account ->
-			account?.copy(locked = true) ?: PlayerAccount(uuid = uuid, locked = true)
-		}
+		setAccountLock(uuid, false)
 		BrighterEconomy.LOG.atInfo().setMessage("Unlocked account {}").addArgument(uuid).log()
 	}
 

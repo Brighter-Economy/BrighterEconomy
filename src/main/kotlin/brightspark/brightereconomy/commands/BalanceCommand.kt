@@ -8,6 +8,7 @@ import com.mojang.brigadier.context.CommandContext
 import net.minecraft.command.argument.GameProfileArgumentType
 import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 
 object BalanceCommand : Command("balance", {
 	requiresPermission("balance", 0)
@@ -45,20 +46,17 @@ object BalanceCommand : Command("balance", {
 		aliases("bal", "money")
 	}
 
-	private fun getPlayer(ctx: CommandContext<ServerCommandSource>): GameProfile? =
-		GameProfileArgumentType.getProfileArgument(ctx, "player").singleOrNull() ?: run {
-			ctx.source.sendError(Text.of("0 or many players found with that name."))
-			null
-		}
-
 	private fun balance(ctx: CommandContext<ServerCommandSource>, player: GameProfile? = null): Int {
 		val targetIsSelf = player?.id?.equals(ctx.source.player?.id) ?: true
-		return ctx.source.player?.let {
-			val money = ctx.getEconomyState().getMoney(it.uuid)
-			if (targetIsSelf)
-				ctx.source.sendMessage(Text.of("Balance: ${Util.formatMoney(money)}"))
-			else
-				ctx.source.sendMessage(Text.of("${player?.name}'s Balance: ${Util.formatMoney(money)}"))
+		return ctx.source.player?.let { playerEntity ->
+			val account = ctx.getEconomyState().getAccount(playerEntity.uuid)
+			val money = Util.formatMoney(account.money)
+			val textString = "${if (!targetIsSelf) "${player?.name}'s " else ""}Balance: $money"
+			var text = Text.literal(textString)
+			if (account.locked)
+				text = text.append(Text.literal(" [locked]").styled { it.withColor(Formatting.RED) })
+
+			ctx.source.sendMessage(text)
 			1
 		} ?: run {
 			ctx.source.sendError(Text.of("Cannot get balance of non-player"))
