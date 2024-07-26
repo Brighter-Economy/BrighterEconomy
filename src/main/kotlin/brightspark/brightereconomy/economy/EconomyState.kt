@@ -34,14 +34,10 @@ class EconomyState : PersistentState {
 
 	fun getAccounts(): Collection<PlayerAccount> = accounts.values
 
-	fun getAccount(uuid: UUID): PlayerAccount = accounts.getOrPut(uuid) { PlayerAccount(uuid) }
-
-	fun getMoney(uuid: UUID): Long = accounts[uuid]?.money ?: 0
+	fun getAccount(uuid: UUID): PlayerAccount = accounts.getOrElse(uuid) { PlayerAccount(uuid = uuid) }
 
 	fun setMoney(uuid: UUID, money: Long, initiatorName: String? = null) {
-		getAccount(uuid).let {
-			accounts[uuid] = it.copy(money = money)
-		}
+		accounts.compute(uuid) { _, account -> account?.copy(money = money) ?: PlayerAccount(uuid = uuid) }
 		initiatorName?.let {
 			BrighterEconomy.LOG.atInfo()
 				.setMessage("Money set success {} to {} initiated by {}")
