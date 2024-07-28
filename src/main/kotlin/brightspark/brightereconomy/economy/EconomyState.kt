@@ -11,7 +11,9 @@ import java.util.*
 
 class EconomyState : PersistentState {
 	companion object {
-		fun get(): Optional<EconomyState> = BrighterEconomy.SERVER.map { get(it) }
+		fun getOptional(): Optional<EconomyState> = BrighterEconomy.SERVER.map { get(it) }
+
+		fun get(): EconomyState = getOptional().orElseThrow()
 
 		fun get(server: MinecraftServer): EconomyState {
 			val manager = server.getWorld(World.OVERWORLD)!!.persistentStateManager
@@ -37,7 +39,9 @@ class EconomyState : PersistentState {
 	fun getAccount(uuid: UUID): PlayerAccount = accounts.getOrElse(uuid) { PlayerAccount(uuid = uuid) }
 
 	fun setMoney(uuid: UUID, money: Long, initiatorName: String? = null) {
-		accounts.compute(uuid) { _, account -> account?.copy(money = money) ?: PlayerAccount(uuid = uuid) }
+		accounts.compute(uuid) { _, account ->
+			account?.copy(money = money) ?: PlayerAccount(uuid = uuid, money = money)
+		}
 		initiatorName?.let {
 			BrighterEconomy.LOG.atInfo()
 				.setMessage("Money set success {} to {} initiated by {}")

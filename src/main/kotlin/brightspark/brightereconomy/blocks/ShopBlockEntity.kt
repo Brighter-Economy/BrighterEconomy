@@ -1,7 +1,8 @@
 package brightspark.brightereconomy.blocks
 
 import brightspark.brightereconomy.BrighterEconomy
-import brightspark.brightereconomy.screen.ShopScreenHandler
+import brightspark.brightereconomy.screen.ShopCustomerScreenHandler
+import brightspark.brightereconomy.screen.ShopOwnerScreenHandler
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
@@ -25,8 +26,22 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 	private var itemStackForSale: ItemStack = ItemStack.EMPTY
 	var linkedContainer: BlockPos = BlockPos.ORIGIN
 
-	override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-		ShopScreenHandler(syncId, playerInventory, this)
+	fun getStockAmount(): Int =
+		if (linkedContainer == BlockPos.ORIGIN)
+			0
+		else {
+			val be = world!!.getBlockEntity(linkedContainer)
+			if (be is Inventory)
+				be.count(itemStackForSale.item)
+			else
+				0
+		}
+
+	override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): ScreenHandler =
+		if (player.uuid == owner)
+			ShopOwnerScreenHandler(syncId, playerInventory, this)
+		else
+			ShopCustomerScreenHandler(syncId, playerInventory, this)
 
 	override fun getDisplayName(): Text = Text.translatable(cachedState.block.translationKey)
 

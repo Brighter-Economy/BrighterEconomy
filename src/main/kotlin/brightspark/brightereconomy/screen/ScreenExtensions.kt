@@ -1,11 +1,13 @@
 package brightspark.brightereconomy.screen
 
+import io.wispforest.owo.client.screens.SyncedProperty
 import io.wispforest.owo.ui.component.*
 import io.wispforest.owo.ui.container.Containers
 import io.wispforest.owo.ui.container.FlowLayout
 import io.wispforest.owo.ui.container.GridLayout
 import io.wispforest.owo.ui.core.Component
 import io.wispforest.owo.ui.core.Sizing
+import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
@@ -68,10 +70,21 @@ fun FlowLayout.button(text: Text, onPress: (ButtonComponent) -> Unit, block: But
 }
 
 fun labelComponent(text: Text, block: LabelComponent.() -> Unit = {}): LabelComponent =
-	Components.label(text).apply(block)
+	Components.label(text).apply { shadow(true) }.apply(block)
 
 fun FlowLayout.label(text: Text, block: LabelComponent.() -> Unit = {}) {
 	this.child(labelComponent(text, block))
+}
+
+fun <T> FlowLayout.label(
+	property: SyncedProperty<T>,
+	textFactory: (T) -> Text,
+	block: LabelComponent.() -> Unit = {}
+) {
+	this.child(labelComponent(textFactory(property.get())) {
+		property.observe { text(textFactory(it)) }
+		block()
+	})
 }
 
 fun textBoxComponent(
@@ -85,4 +98,22 @@ fun FlowLayout.textBox(horizontalSizing: Sizing = Sizing.content(), block: TextB
 
 fun FlowLayout.texture(texture: Identifier, width: Int, height: Int, block: TextureComponent.() -> Unit = {}) {
 	this.child(Components.texture(texture, 0, 0, width, height, width, height).apply(block))
+}
+
+fun itemComponent(stack: ItemStack, block: ItemComponent.() -> Unit = {}): ItemComponent =
+	Components.item(stack).apply(block)
+
+fun FlowLayout.item(stack: ItemStack, block: ItemComponent.() -> Unit = {}) {
+	this.child(itemComponent(stack, block))
+}
+
+fun FlowLayout.item(stackProperty: SyncedProperty<ItemStack>, block: ItemComponent.() -> Unit = {}) {
+	this.child(itemComponent(stackProperty.get()) {
+		stackProperty.observe { stack(it) }
+		block()
+	})
+}
+
+fun Component.tooltip(vararg text: String) {
+	this.tooltip(text.map { Text.of(it) })
 }

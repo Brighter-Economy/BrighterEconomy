@@ -46,7 +46,7 @@ object ApiController {
 				this.flatMap { it.getByUuid(uuid) }.map { it.name }.orElse("")
 
 			get {
-				val state = EconomyState.get()
+				val state = EconomyState.getOptional()
 				if (state.isPresent) {
 					val userCache = getUserCache()
 					call.respond(
@@ -60,7 +60,7 @@ object ApiController {
 			get("{uuid?}") {
 				val uuid = call.parameters["uuid"]?.let { UUID.fromString(it) }
 					?: return@get call.respondText("Missing UUID", status = HttpStatusCode.BadRequest)
-				val state = EconomyState.get()
+				val state = EconomyState.getOptional()
 				if (state.isPresent) {
 					val userCache = getUserCache()
 					call.respond(state.get().getAccount(uuid).toDto(userCache.getUsername(uuid)))
@@ -71,7 +71,7 @@ object ApiController {
 
 		route("/transactions") {
 			get {
-				val state = EconomyState.get()
+				val state = EconomyState.getOptional()
 				if (state.isPresent)
 					call.respond(state.get().getTransactions().toTypedArray())
 				else
@@ -80,7 +80,7 @@ object ApiController {
 			get("{uuid?}") {
 				val uuid = call.parameters["uuid"]?.let { UUID.fromString(it) }
 					?: return@get call.respondText("Missing UUID", status = HttpStatusCode.BadRequest)
-				val state = EconomyState.get()
+				val state = EconomyState.getOptional()
 				if (state.isPresent)
 					call.respond(state.get().getAccountTransactions(uuid))
 				else

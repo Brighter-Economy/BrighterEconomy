@@ -36,13 +36,10 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 				?.let { it as ShopBlockEntity }
 				?.let { be ->
 					if (be.linkedContainer == BlockPos.ORIGIN)
-					player.sendLiteralOverlayMessage("No container linked!", Formatting.RED)
-					else if (be.owner == player.uuid)
-					player.openHandledScreen(state.createScreenHandlerFactory(world, pos))
+						player.sendLiteralOverlayMessage("No container linked!", Formatting.RED)
 					else
-					// TODO: Open trade screen
 						player.openHandledScreen(state.createScreenHandlerFactory(world, pos))
-			}
+				}
 		}
 		return ActionResult.SUCCESS
 	}

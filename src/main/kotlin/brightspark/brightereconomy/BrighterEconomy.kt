@@ -3,9 +3,12 @@ package brightspark.brightereconomy
 import brightspark.brightereconomy.blocks.ShopBlock
 import brightspark.brightereconomy.blocks.ShopBlockEntity
 import brightspark.brightereconomy.commands.BaseCommand
+import brightspark.brightereconomy.economy.PlayerAccount
 import brightspark.brightereconomy.items.ShopBlockItem
 import brightspark.brightereconomy.rest.ApiController
-import brightspark.brightereconomy.screen.ShopScreenHandler
+import brightspark.brightereconomy.screen.ShopCustomerScreenHandler
+import brightspark.brightereconomy.screen.ShopOwnerScreenHandler
+import io.wispforest.owo.network.serialization.PacketBufSerializer
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
@@ -44,7 +47,8 @@ object BrighterEconomy : ModInitializer {
 	lateinit var PLAYER_SHOP_BLOCK: ShopBlock
 	lateinit var SERVER_SHOP_BLOCK: ShopBlock
 	lateinit var SHOP_BLOCK_ENTITY: BlockEntityType<ShopBlockEntity>
-	lateinit var SHOP_SCREEN_HANDLER: ScreenHandlerType<ShopScreenHandler>
+	lateinit var SHOP_OWNER_SCREEN_HANDLER: ScreenHandlerType<ShopOwnerScreenHandler>
+	lateinit var SHOP_CUSTOMER_SCREEN_HANDLER: ScreenHandlerType<ShopCustomerScreenHandler>
 
 	override fun onInitialize() {
 		// Events
@@ -89,10 +93,12 @@ object BrighterEconomy : ModInitializer {
 		)
 
 		// Screens
-		SHOP_SCREEN_HANDLER = regScreenHandler("shop", ::ShopScreenHandler)
+		SHOP_OWNER_SCREEN_HANDLER = regScreenHandler("shop_owner", ::ShopOwnerScreenHandler)
+		SHOP_CUSTOMER_SCREEN_HANDLER = regScreenHandler("shop_customer", ::ShopCustomerScreenHandler)
 
 		// Network
 //		NETWORK.registerServerbound(SetShopDataPacket::class.java, SetShopDataPacket::handle)
+		PacketBufSerializer.register(PlayerAccount::class.java, PlayerAccount.SERIALIZER)
 	}
 
 	private fun id(name: String): Identifier = Identifier.of(MOD_ID, name)!!
