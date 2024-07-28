@@ -1,5 +1,6 @@
 {
 	"itemGroup.brightereconomy.group": "Brighter Economy",
 	"block.brightereconomy.player_shop": "Player Shop",
-	"block.brightereconomy.server_shop": "Server Shop"
+	"block.brightereconomy.server_shop": "Server Shop",
+	"screen.brightereconomy.player_shop.purchase.success": "Bought %s %s for %s from %s"
 }
