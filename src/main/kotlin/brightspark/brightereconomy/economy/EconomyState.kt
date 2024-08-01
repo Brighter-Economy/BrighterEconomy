@@ -57,9 +57,18 @@ class EconomyState : PersistentState {
 
 	fun getAccountTransactions(uuid: UUID): List<Transaction> = transactions[uuid] ?: emptyList()
 
+	private fun addTransaction(uuid: UUID, transaction: Transaction) =
+		transactions.compute(uuid) { _, list -> (list ?: mutableListOf()).apply { this += transaction } }
+
+	private fun addTransaction(uuidFrom: UUID?, uuidTo: UUID?, money: Long): Transaction =
+		Transaction(uuidFrom = uuidFrom, uuidTo = uuidTo, money = money).also { transaction ->
+			uuidFrom?.let { addTransaction(it, transaction) }
+			uuidTo?.let { addTransaction(it, transaction) }
+		}
+
 	fun exchange(uuidFrom: UUID?, uuidTo: UUID?, money: Long, initiatorName: String): TransactionExchangeResult {
 		if (uuidFrom == null && uuidTo == null)
-			throw IllegalArgumentException("")
+			throw IllegalArgumentException("Can't exchange money between two null account UUIDs!")
 
 		BrighterEconomy.LOG.atInfo()
 			.setMessage("Attempting to exchange {} from {} to {} initiated by {}")
@@ -74,6 +83,8 @@ class EconomyState : PersistentState {
 
 		from?.let { setMoney(it.uuid, it.money - money) }
 		to?.let { setMoney(it.uuid, it.money + money) }
+		addTransaction(from?.uuid, to?.uuid, money)
+
 		BrighterEconomy.LOG.atInfo()
 			.setMessage("Exchange success {} from {} to {} initiated by {}")
 			.addArgument(money).addArgument(uuidFrom).addArgument(uuidTo).addArgument(initiatorName)
