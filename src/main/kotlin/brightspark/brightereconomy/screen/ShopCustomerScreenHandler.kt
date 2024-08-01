@@ -4,6 +4,7 @@ import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.blocks.ShopBlockEntity
 import brightspark.brightereconomy.economy.EconomyState
 import brightspark.brightereconomy.economy.PlayerAccount
+import brightspark.brightereconomy.economy.PlayerAccountListener
 import brightspark.brightereconomy.economy.TransactionExchangeResult
 import brightspark.brightereconomy.network.CustomerScreenPurchasePacket
 import brightspark.brightereconomy.util.Util
@@ -21,8 +22,10 @@ class ShopCustomerScreenHandler(
 	syncId: Int,
 	playerInventory: PlayerInventory,
 	shopBlockEntity: ShopBlockEntity? = null
-) : ShopScreenHandler(BrighterEconomy.SHOP_CUSTOMER_SCREEN_HANDLER, syncId, playerInventory, shopBlockEntity, 8, 79) {
+) : ShopScreenHandler(BrighterEconomy.SHOP_CUSTOMER_SCREEN_HANDLER, syncId, playerInventory, shopBlockEntity, 8, 79),
+	PlayerAccountListener {
 
+	// TODO: Update this whenever the player's money changes
 	var playerAccount: SyncedProperty<PlayerAccount> =
 		property(EconomyState.get().getAccount(playerInventory.player.uuid))
 		private set
@@ -76,6 +79,8 @@ class ShopCustomerScreenHandler(
 			}
 		}
 	}
+
+	override fun handlePlayerAccountUpdate(account: PlayerAccount) = this.playerAccount.set(account)
 
 	fun playerInvSpace(forSaleStack: ItemStack): Int = playerInventory.getSpaceFor(forSaleStack)
 

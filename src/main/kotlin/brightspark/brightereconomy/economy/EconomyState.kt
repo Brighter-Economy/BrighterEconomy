@@ -41,7 +41,10 @@ class EconomyState : PersistentState {
 	fun setMoney(uuid: UUID, money: Long, initiatorName: String? = null) {
 		accounts.compute(uuid) { _, account ->
 			account?.copy(money = money) ?: PlayerAccount(uuid = uuid, money = money)
+		}.also {
+			onPlayerAccountUpdated(it!!)
 		}
+
 		initiatorName?.let {
 			BrighterEconomy.LOG.atInfo()
 				.setMessage("Money set success {} to {} initiated by {}")
@@ -54,7 +57,6 @@ class EconomyState : PersistentState {
 
 	fun getAccountTransactions(uuid: UUID): List<Transaction> = transactions[uuid] ?: emptyList()
 
-	// TODO: Add itemExchange function
 	fun exchange(uuidFrom: UUID?, uuidTo: UUID?, money: Long, initiatorName: String): TransactionExchangeResult {
 		if (uuidFrom == null && uuidTo == null)
 			throw IllegalArgumentException("")
@@ -109,6 +111,8 @@ class EconomyState : PersistentState {
 	private fun setAccountLock(uuid: UUID, locked: Boolean) {
 		accounts.compute(uuid) { _, account ->
 			account?.copy(locked = locked) ?: PlayerAccount(uuid = uuid, locked = locked)
+		}.also {
+			onPlayerAccountUpdated(it!!)
 		}
 	}
 
@@ -120,6 +124,13 @@ class EconomyState : PersistentState {
 	fun unlockAccount(uuid: UUID) {
 		setAccountLock(uuid, false)
 		BrighterEconomy.LOG.atInfo().setMessage("Unlocked account {}").addArgument(uuid).log()
+	}
+
+	private fun onPlayerAccountUpdated(account: PlayerAccount) = BrighterEconomy.SERVER.ifPresent { server ->
+		server.playerManager.playerList.asSequence()
+			.map { it.currentScreenHandler }
+			.filter { it is PlayerAccountListener }
+			.forEach { (it as PlayerAccountListener).handlePlayerAccountUpdate(account) }
 	}
 
 	private fun readNbt(nbt: NbtCompound) {
