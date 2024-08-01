@@ -53,7 +53,7 @@ class EconomyState : PersistentState {
 		}
 	}
 
-	fun getTransactions(): List<Transaction> = transactions.values.flatten()
+	fun getTransactions(): Set<Transaction> = transactions.values.flatten().toSet()
 
 	fun getAccountTransactions(uuid: UUID): List<Transaction> = transactions[uuid] ?: emptyList()
 
