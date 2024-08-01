@@ -150,9 +150,26 @@ class EconomyState : PersistentState {
 			val account = PlayerAccount(it as NbtCompound)
 			accounts[account.uuid] = account
 		}
+		transactions.clear()
+		nbt.getList("transactions", NbtElement.COMPOUND_TYPE.toInt()).forEach { transactionListEntryNbt ->
+			val uuid = (transactionListEntryNbt as NbtCompound).getUuid("uuid")
+			val list = transactionListEntryNbt.getList("list", NbtElement.COMPOUND_TYPE.toInt())
+				.mapTo(mutableListOf()) { Transaction(it as NbtCompound) }
+			transactions[uuid] = list
+		}
 	}
 
 	override fun writeNbt(nbt: NbtCompound): NbtCompound = nbt.apply {
 		put("accounts", NbtList().apply { accounts.values.forEach { add(it.writeNbt(NbtCompound())) } })
+		put("transactions", NbtList().apply {
+			transactions.forEach { (uuid, list) ->
+				add(NbtCompound().apply {
+					putUuid("uuid", uuid)
+					put("list", NbtList().apply {
+						list.forEach { add(it.writeNbt(NbtCompound())) }
+					})
+				})
+			}
+		})
 	}
 }
