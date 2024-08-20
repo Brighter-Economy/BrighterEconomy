@@ -39,6 +39,10 @@ dependencies {
     implementation "io.ktor:ktor-serialization-kotlinx-json:${project.ktor_version}"
 }
 
+loom {
+    accessWidenerPath = file("src/main/resources/brightereconomy.accesswidener")
+}
+
 processResources {
     inputs.property "version", project.version
 

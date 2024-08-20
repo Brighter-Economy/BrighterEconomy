@@ -3,6 +3,8 @@ package brightspark.brightereconomy
 import brightspark.brightereconomy.blocks.ShopBlock
 import brightspark.brightereconomy.blocks.ShopBlockEntity
 import brightspark.brightereconomy.commands.BaseCommand
+import brightspark.brightereconomy.commands.argtype.PlayerAccountArgumentType
+import brightspark.brightereconomy.commands.argtype.PlayerProfileArgumentType
 import brightspark.brightereconomy.economy.PlayerAccount
 import brightspark.brightereconomy.items.ShopBlockItem
 import brightspark.brightereconomy.rest.ApiController
@@ -10,6 +12,7 @@ import brightspark.brightereconomy.screen.ShopCustomerScreenHandler
 import brightspark.brightereconomy.screen.ShopOwnerScreenHandler
 import io.wispforest.owo.network.serialization.PacketBufSerializer
 import net.fabricmc.api.ModInitializer
+import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
@@ -19,6 +22,7 @@ import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.command.argument.serialize.ConstantArgumentSerializer
 import net.minecraft.item.BlockItem
 import net.minecraft.item.Item
 import net.minecraft.item.Item.Settings
@@ -58,6 +62,16 @@ object BrighterEconomy : ModInitializer {
 		ServerLifecycleEvents.SERVER_STOPPED.register { SERVER = Optional.empty() }
 
 		// Commands
+		ArgumentTypeRegistry.registerArgumentType(
+			PlayerAccountArgumentType.ID,
+			PlayerAccountArgumentType::class.java,
+			ConstantArgumentSerializer.of(::PlayerAccountArgumentType)
+		)
+		ArgumentTypeRegistry.registerArgumentType(
+			PlayerProfileArgumentType.ID,
+			PlayerProfileArgumentType::class.java,
+			ConstantArgumentSerializer.of(::PlayerProfileArgumentType)
+		)
 		CommandRegistrationCallback.EVENT.register { dispatcher, _, _ -> BaseCommand.register(dispatcher) }
 
 		// Blocks

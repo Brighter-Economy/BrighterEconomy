@@ -30,6 +30,7 @@
 			}
 		]
 	},
+	"accessWidener": "brightereconomy.accesswidener",
 	"mixins": [
 		"brightereconomy.mixins.json"
 	],

@@ -1,9 +1,14 @@
 package brightspark.brightereconomy.economy
 
-enum class TransactionExchangeResult {
-	SUCCESS,
-	INSUFFICIENT_MONEY,
-	OVERFLOW_MONEY,
-	FROM_LOCKED,
-	TO_LOCKED
+import net.minecraft.text.Text
+
+enum class TransactionExchangeResult(val langKey: String) {
+	SUCCESS("brightereconomy.transaction.result.success"),
+	INSUFFICIENT_MONEY("brightereconomy.transaction.result.insufficient"),
+	OVERFLOW_MONEY("brightereconomy.transaction.result.overflow"),
+	FROM_LOCKED("brightereconomy.transaction.result.from_locked"),
+	TO_LOCKED("brightereconomy.transaction.result.to_locked");
+
+	val text: Text
+		get() = Text.translatable(langKey)
 }

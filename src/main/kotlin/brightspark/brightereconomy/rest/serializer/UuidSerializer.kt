@@ -1,4 +1,4 @@
-package brightspark.brightereconomy.rest
+package brightspark.brightereconomy.rest.serializer
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind

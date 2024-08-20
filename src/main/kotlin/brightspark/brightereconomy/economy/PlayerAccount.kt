@@ -2,8 +2,8 @@
 
 package brightspark.brightereconomy.economy
 
-import brightspark.brightereconomy.rest.UuidSerializer
 import brightspark.brightereconomy.rest.dto.PlayerAccountDto
+import brightspark.brightereconomy.rest.serializer.UuidSerializer
 import brightspark.brightereconomy.util.Util
 import io.wispforest.owo.network.serialization.PacketBufSerializer
 import kotlinx.serialization.Serializable

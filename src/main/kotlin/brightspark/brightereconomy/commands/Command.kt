@@ -2,7 +2,6 @@ package brightspark.brightereconomy.commands
 
 import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.economy.EconomyState
-import com.mojang.authlib.GameProfile
 import com.mojang.brigadier.arguments.ArgumentType
 import com.mojang.brigadier.builder.ArgumentBuilder
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
@@ -10,10 +9,8 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.tree.LiteralCommandNode
 import me.lucko.fabric.api.permissions.v0.Permissions
-import net.minecraft.command.argument.GameProfileArgumentType
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
-import net.minecraft.text.Text
 
 abstract class Command(
 	private val name: String,
@@ -76,10 +73,4 @@ abstract class Command(
 	}
 
 	protected fun aliases(vararg aliases: String): Unit = aliases.forEach { this.aliases.add(it) }
-
-	protected fun getPlayer(ctx: CommandContext<ServerCommandSource>): GameProfile? =
-		GameProfileArgumentType.getProfileArgument(ctx, "player").singleOrNull() ?: run {
-			ctx.source.sendError(Text.of("0 or many players found with that name."))
-			null
-		}
 }
