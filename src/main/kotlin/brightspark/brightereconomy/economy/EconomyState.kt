@@ -61,7 +61,7 @@ class EconomyState : PersistentState {
 		transactions.compute(uuid) { _, list -> (list ?: mutableListOf()).apply { this += transaction } }
 
 	private fun addTransaction(uuidFrom: UUID?, uuidTo: UUID?, money: Long): Transaction =
-		Transaction(uuidFrom = uuidFrom, uuidTo = uuidTo, money = money).also { transaction ->
+		Transaction.of(uuidFrom = uuidFrom, uuidTo = uuidTo, money = money).also { transaction ->
 			uuidFrom?.let { addTransaction(it, transaction) }
 			uuidTo?.let { addTransaction(it, transaction) }
 		}
@@ -154,7 +154,7 @@ class EconomyState : PersistentState {
 		nbt.getList("transactions", NbtElement.COMPOUND_TYPE.toInt()).forEach { transactionListEntryNbt ->
 			val uuid = (transactionListEntryNbt as NbtCompound).getUuid("uuid")
 			val list = transactionListEntryNbt.getList("list", NbtElement.COMPOUND_TYPE.toInt())
-				.mapTo(mutableListOf()) { Transaction(it as NbtCompound) }
+				.mapTo(mutableListOf()) { Transaction.deserialize(it as NbtCompound) }
 			transactions[uuid] = list
 		}
 	}
