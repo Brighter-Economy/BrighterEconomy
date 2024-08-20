@@ -2,6 +2,7 @@ package brightspark.brightereconomy.rest
 
 import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.economy.EconomyState
+import brightspark.brightereconomy.rest.dto.ModConfigEntryDto
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -38,6 +39,21 @@ object ApiController {
 		}.start()
 
 	private fun Application.routes() = routing {
+		route("/config") {
+			get {
+				// FIXME: Idk why I'm getting serialization errors for this... it should be so much easier
+				val configs = BrighterEconomy.CONFIG.allOptions().values.map { option ->
+					val name = option.key().name()
+					val v = option.value()
+					if (v is List<*>)
+						ModConfigEntryDto(name, v.map { it.toString() })
+					else
+						ModConfigEntryDto(name, v.toString())
+				}
+				call.respond(configs)
+			}
+		}
+
 		route("/accounts") {
 			fun getUserCache(): Optional<UserCache> =
 				Optional.ofNullable(BrighterEconomy.SERVER.get().userCache)
