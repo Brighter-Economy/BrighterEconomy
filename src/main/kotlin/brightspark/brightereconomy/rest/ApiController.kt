@@ -3,6 +3,7 @@ package brightspark.brightereconomy.rest
 import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.economy.EconomyState
 import brightspark.brightereconomy.rest.dto.ModConfigEntryDto
+import com.google.gson.Gson
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -16,6 +17,7 @@ import java.util.*
 
 object ApiController {
 	private var engine: Optional<NettyApplicationEngine> = Optional.empty()
+	private val gson = Gson()
 
 	fun init() {
 		if (!BrighterEconomy.CONFIG.apiEnabled() || engine.isPresent) return
@@ -41,7 +43,6 @@ object ApiController {
 	private fun Application.routes() = routing {
 		route("/config") {
 			get {
-				// FIXME: Idk why I'm getting serialization errors for this... it should be so much easier
 				val configs = BrighterEconomy.CONFIG.allOptions().values.map { option ->
 					val name = option.key().name()
 					val v = option.value()
@@ -50,7 +51,7 @@ object ApiController {
 					else
 						ModConfigEntryDto(name, v.toString())
 				}
-				call.respond(configs)
+				call.respond(gson.toJson(configs))
 			}
 		}
 
