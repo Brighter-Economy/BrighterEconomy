@@ -1,6 +1,7 @@
 package brightspark.brightereconomy.economy
 
 import brightspark.brightereconomy.BrighterEconomy
+import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtElement
 import net.minecraft.nbt.NbtList
@@ -57,14 +58,71 @@ class EconomyState : PersistentState {
 
 	fun getAccountTransactions(uuid: UUID): List<Transaction> = transactions[uuid] ?: emptyList()
 
-	private fun addTransaction(uuid: UUID, transaction: Transaction) =
+	private fun addTransaction(uuid: UUID, transaction: Transaction) {
 		transactions.compute(uuid) { _, list -> (list ?: mutableListOf()).apply { this += transaction } }
+	}
 
-	private fun addTransaction(uuidFrom: UUID?, uuidTo: UUID?, money: Long): Transaction =
-		Transaction.of(uuidFrom = uuidFrom, uuidTo = uuidTo, money = money).also { transaction ->
-			uuidFrom?.let { addTransaction(it, transaction) }
-			uuidTo?.let { addTransaction(it, transaction) }
+	private fun transactionTransfer(uuidFrom: UUID?, uuidTo: UUID?, money: Long) {
+		Transaction.of(type = TransactionType.TRANSFER, uuidFrom = uuidFrom, uuidTo = uuidTo, money = money)
+			.let { transaction ->
+				uuidFrom?.let { addTransaction(it, transaction) }
+				uuidTo?.let { addTransaction(it, transaction) }
+			}
+	}
+
+	// TODO: Implement usage for shop purchases
+	private fun transactionPurchase(uuidFrom: UUID?, uuidTo: UUID, money: Long, stack: ItemStack) {
+		addTransaction(
+			uuidTo,
+			Transaction.of(
+				type = TransactionType.PURCHASE,
+				uuidFrom = uuidFrom,
+				uuidTo = uuidTo,
+				money = money,
+				itemPurchased = stack
+			)
+		)
+		uuidFrom?.let {
+			addTransaction(
+				it,
+				Transaction.of(
+					type = TransactionType.SALE,
+					uuidFrom = it,
+					uuidTo = uuidTo,
+					money = money,
+					itemPurchased = stack
+				)
+			)
 		}
+	}
+
+	// TODO: Implement usage for commands
+	private fun transactionModify(uuid: UUID, money: Long) {
+		if (money == 0.toLong()) return
+		addTransaction(
+			uuid,
+			Transaction.of(
+				type = TransactionType.MODIFY,
+				uuidFrom = if (money < 0) uuid else null,
+				uuidTo = if (money > 0) uuid else null,
+				money = money
+			)
+		)
+	}
+
+	// TODO: Implement usage for commands
+	private fun transactionSet(uuid: UUID, money: Long) {
+		val diff = money - getAccount(uuid).money
+		addTransaction(
+			uuid,
+			Transaction.of(
+				type = TransactionType.MODIFY,
+				uuidFrom = if (diff < 0) uuid else null,
+				uuidTo = if (diff > 0) uuid else null,
+				money = diff
+			)
+		)
+	}
 
 	fun exchange(uuidFrom: UUID?, uuidTo: UUID?, money: Long, initiatorName: String): TransactionExchangeResult {
 		if (uuidFrom == null && uuidTo == null)
@@ -83,7 +141,7 @@ class EconomyState : PersistentState {
 
 		from?.let { setMoney(it.uuid, it.money - money) }
 		to?.let { setMoney(it.uuid, it.money + money) }
-		addTransaction(from?.uuid, to?.uuid, money)
+		transactionTransfer(from?.uuid, to?.uuid, money)
 
 		BrighterEconomy.LOG.atInfo()
 			.setMessage("Exchange success {} from {} to {} initiated by {}")

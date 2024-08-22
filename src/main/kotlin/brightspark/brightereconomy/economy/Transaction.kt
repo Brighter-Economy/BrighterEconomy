@@ -13,6 +13,7 @@ import java.util.*
 @Serializable
 data class Transaction(
 	val type: TransactionType,
+	val participants: TransactionParticipants,
 	val uuidFrom: UUID?,
 	val uuidTo: UUID?,
 	val money: Long,
@@ -21,20 +22,30 @@ data class Transaction(
 ) {
 	companion object {
 		fun of(
+			type: TransactionType,
 			uuidFrom: UUID?,
 			uuidTo: UUID?,
 			money: Long,
 			itemPurchased: ItemStack? = null,
 			timestamp: Long = System.currentTimeMillis()
-		): Transaction =
-			Transaction(TransactionType.fromUuids(uuidFrom, uuidTo), uuidFrom, uuidTo, money, itemPurchased, timestamp)
+		): Transaction = Transaction(
+			type,
+			TransactionParticipants.fromUuids(uuidFrom, uuidTo),
+			uuidFrom,
+			uuidTo,
+			money,
+			itemPurchased,
+			timestamp
+		)
 
 		fun deserialize(nbt: NbtCompound): Transaction {
 			val type = TransactionType.entries[nbt.getByte("type").toInt()]
+			val participants = TransactionParticipants.entries[nbt.getByte("participants").toInt()]
 			return Transaction(
 				type,
-				if (type.hasFrom) nbt.getUuid("uuidFrom") else null,
-				if (type.hasTo) nbt.getUuid("uuidTo") else null,
+				participants,
+				if (participants.hasFrom) nbt.getUuid("uuidFrom") else null,
+				if (participants.hasTo) nbt.getUuid("uuidTo") else null,
 				nbt.getLong("money"),
 				if (nbt.getBoolean("hasItemPurchased")) ItemStack.fromNbt(nbt.getCompound("itemPurchased")) else null,
 				nbt.getLong("timestamp")
@@ -44,6 +55,7 @@ data class Transaction(
 
 	fun writeNbt(nbt: NbtCompound): NbtCompound = nbt.apply {
 		putByte("type", this@Transaction.type.ordinal.toByte())
+		putByte("participants", this@Transaction.participants.ordinal.toByte())
 		uuidFrom?.let { putUuid("uuidFrom", it) }
 		uuidTo?.let { putUuid("uuidTo", it) }
 		putLong("money", money)
