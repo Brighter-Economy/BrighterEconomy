@@ -41,7 +41,7 @@ object ApiController {
 		embeddedServer(Netty, port = BrighterEconomy.CONFIG.apiPort()) {
 			install(ContentNegotiation) { json() }
 			routes()
-		}.start()
+		}.start().engine
 
 	private fun Application.routes() = routing {
 		route("/config") {
