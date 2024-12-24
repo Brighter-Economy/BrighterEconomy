@@ -2,14 +2,8 @@ package brightspark.brightereconomy.rest
 
 import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.economy.EconomyState
-import com.google.gson.Gson
 import com.google.gson.JsonArray
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -19,31 +13,7 @@ import net.minecraft.util.UserCache
 import java.util.*
 
 object ApiController {
-	private var engine: Optional<NettyApplicationEngine> = Optional.empty()
-	private val gson = Gson()
-
-	fun init() {
-		if (!BrighterEconomy.CONFIG.apiEnabled() || engine.isPresent) return
-		BrighterEconomy.LOG.atInfo()
-			.setMessage("Starting REST server on port ${BrighterEconomy.CONFIG.apiPort()}")
-			.log()
-		engine = Optional.of(create())
-	}
-
-	fun shutdown() {
-		if (engine.isEmpty) return
-		BrighterEconomy.LOG.atInfo().setMessage("Stopping REST server").log()
-		engine.get().stop()
-		engine = Optional.empty()
-	}
-
-	private fun create(): NettyApplicationEngine =
-		embeddedServer(Netty, port = BrighterEconomy.CONFIG.apiPort()) {
-			install(ContentNegotiation) { json() }
-			routes()
-		}.start().engine
-
-	private fun Application.routes() = routing {
+	fun routes(route: Route): Unit = route.run {
 		route("/config") {
 			get {
 				val json = com.google.gson.JsonObject()

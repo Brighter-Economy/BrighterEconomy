@@ -7,7 +7,7 @@ import brightspark.brightereconomy.commands.argtype.PlayerAccountArgumentType
 import brightspark.brightereconomy.commands.argtype.PlayerProfileArgumentType
 import brightspark.brightereconomy.economy.PlayerAccount
 import brightspark.brightereconomy.items.ShopBlockItem
-import brightspark.brightereconomy.rest.ApiController
+import brightspark.brightereconomy.rest.RestController
 import brightspark.brightereconomy.screen.ShopCustomerScreenHandler
 import brightspark.brightereconomy.screen.ShopOwnerScreenHandler
 import io.wispforest.owo.network.serialization.PacketBufSerializer
@@ -57,8 +57,8 @@ object BrighterEconomy : ModInitializer {
 	override fun onInitialize() {
 		// Events
 		ServerLifecycleEvents.SERVER_STARTING.register { SERVER = Optional.of(it) }
-		ServerLifecycleEvents.SERVER_STARTED.register { ApiController.init() }
-		ServerLifecycleEvents.SERVER_STOPPING.register { ApiController.shutdown() }
+		ServerLifecycleEvents.SERVER_STARTED.register { RestController.init() }
+		ServerLifecycleEvents.SERVER_STOPPING.register { RestController.shutdown() }
 		ServerLifecycleEvents.SERVER_STOPPED.register { SERVER = Optional.empty() }
 
 		// Commands

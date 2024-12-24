@@ -1,0 +1,47 @@
+package brightspark.brightereconomy.rest
+
+import brightspark.brightereconomy.BrighterEconomy
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.http.content.*
+import io.ktor.server.netty.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.routing.*
+import java.util.*
+
+object RestController {
+	private var engine: Optional<NettyApplicationEngine> = Optional.empty()
+
+	fun init() {
+		if (!BrighterEconomy.CONFIG.apiEnabled() || engine.isPresent) return
+		BrighterEconomy.LOG.atInfo()
+			.setMessage("Starting REST server on port ${BrighterEconomy.CONFIG.apiPort()}")
+			.log()
+		engine = Optional.of(create())
+	}
+
+	fun shutdown() {
+		if (engine.isEmpty) return
+		BrighterEconomy.LOG.atInfo().setMessage("Stopping REST server").log()
+		engine.get().stop()
+		engine = Optional.empty()
+	}
+
+	private fun create(): NettyApplicationEngine =
+		embeddedServer(Netty, port = BrighterEconomy.CONFIG.apiPort()) {
+			install(ContentNegotiation) { json() }
+			routes()
+		}.start().engine
+
+	private fun Application.routes() = routing {
+		route("/api", ApiController::routes)
+
+		singlePageApplication {
+			react("web")
+			useResources = true
+			defaultPage = "index.html"
+		}
+//		staticResources("/", "web")
+	}
+}
