@@ -124,6 +124,15 @@ class EconomyState : PersistentState {
 		)
 	}
 
+	fun simulateExchange(uuidFrom: UUID?, uuidTo: UUID?, money: Long): TransactionExchangeResult {
+		if (uuidFrom == null && uuidTo == null)
+			throw IllegalArgumentException("Can't exchange money between two null account UUIDs!")
+
+		val from = uuidFrom?.let { getAccount(it) }
+		val to = uuidTo?.let { getAccount(it) }
+		return validateExchange(from, to, money)
+	}
+
 	fun exchange(uuidFrom: UUID?, uuidTo: UUID?, money: Long, initiatorName: String): TransactionExchangeResult {
 		if (uuidFrom == null && uuidTo == null)
 			throw IllegalArgumentException("Can't exchange money between two null account UUIDs!")

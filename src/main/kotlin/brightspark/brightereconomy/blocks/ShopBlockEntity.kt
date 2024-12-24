@@ -16,6 +16,7 @@ import net.minecraft.screen.ScreenHandler
 import net.minecraft.text.Text
 import net.minecraft.util.Util
 import net.minecraft.util.math.BlockPos
+import net.minecraft.world.World
 import java.util.*
 
 class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEconomy.SHOP_BLOCK_ENTITY, pos, state),
@@ -24,18 +25,70 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 	var owner: UUID = Util.NIL_UUID
 	var cost: Int = 0
 	private var itemStackForSale: ItemStack = ItemStack.EMPTY
-	var linkedContainer: BlockPos = BlockPos.ORIGIN
 
-	fun getStockAmount(): Int =
-		if (linkedContainer == BlockPos.ORIGIN)
-			0
-		else {
-			val be = world!!.getBlockEntity(linkedContainer)
-			if (be is Inventory)
-				be.count(itemStackForSale.item)
-			else
-				0
+	var linkedContainer: BlockPos = BlockPos.ORIGIN
+	private val linkedInventory: Inventory?
+		get() = if (linkedContainer != BlockPos.ORIGIN) world!!.getBlockEntity(linkedContainer) as Inventory else null
+
+	private val listeners: MutableSet<ShopCustomerScreenHandler> = mutableSetOf()
+	private var cachedStock: Int = 0
+
+	fun addListener(listener: ShopCustomerScreenHandler) {
+		listeners += listener
+	}
+
+	fun removeListener(listener: ShopCustomerScreenHandler) {
+		listeners -= listener
+	}
+
+	fun notifyListeners(function: (ShopCustomerScreenHandler) -> Unit) {
+		listeners.forEach(function)
+	}
+
+	fun tick(world: World, pos: BlockPos, state: BlockState) {
+		if ((world.time + 6).mod(20) != 0 || listeners.isEmpty()) return
+
+		// Check if there's been any changes to the linked container's inventory
+		linkedInventory?.let { inv ->
+			val stock = (0 until inv.size()).asSequence()
+				.map { inv.getStack(it) }
+				.filter { ItemStack.areItemsEqual(it, itemStackForSale) }
+				.sumOf { it.count }
+			if (cachedStock != stock) {
+				cachedStock = stock
+				notifyListeners { it.stock.set(stock) }
+			}
 		}
+	}
+
+	fun getStockAmount(): Int = linkedInventory?.count(itemStackForSale.item) ?: 0
+
+	fun removeStock(amount: Int): List<ItemStack> {
+		val inv = linkedInventory ?: return emptyList()
+		val stacks = mutableListOf<ItemStack>()
+		var amountLeftNeeded = amount
+		for (i in (0..<inv.size()).reversed()) {
+			val stack = inv.getStack(i)
+			if (ItemStack.areItemsEqual(stack, itemStackForSale)) {
+				val stackCount = stack.count
+				when {
+					stackCount < amountLeftNeeded -> {
+						stacks += stack
+						amountLeftNeeded -= stackCount
+					}
+					stackCount == amountLeftNeeded -> {
+						stacks += stack
+						break
+					}
+					else -> {
+						stacks += stack.split(amountLeftNeeded)
+						break
+					}
+				}
+			}
+		}
+		return stacks
+	}
 
 	override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): ScreenHandler =
 		if (player.uuid == owner)

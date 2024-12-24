@@ -1,11 +1,14 @@
 package brightspark.brightereconomy.blocks
 
+import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.util.sendLiteralOverlayMessage
 import net.minecraft.block.Block
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
 import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.entity.BlockEntity
+import net.minecraft.block.entity.BlockEntityTicker
+import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.state.StateManager
@@ -21,6 +24,13 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 	}
 
 	override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = ShopBlockEntity(pos, state)
+
+	override fun <T : BlockEntity?> getTicker(
+		world: World?,
+		state: BlockState?,
+		type: BlockEntityType<T>?
+	): BlockEntityTicker<T>? =
+		checkType(type, BrighterEconomy.SHOP_BLOCK_ENTITY) { w, p, s, be -> be.tick(w, p, s) }
 
 	override fun onUse(
 		state: BlockState,

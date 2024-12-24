@@ -2,5 +2,12 @@
 	"itemGroup.brightereconomy.group": "Brighter Economy",
 	"block.brightereconomy.player_shop": "Player Shop",
 	"block.brightereconomy.server_shop": "Server Shop",
-	"screen.brightereconomy.player_shop.purchase.success": "Bought %s %s for %s from %s"
+	"text.brightereconomy.player_shop.purchase.success": "Bought %s %s for %s from %s",
+	"text.brightereconomy.player_shop.purchase.failure": "Failed to buy %s %s for %s from %s due to %s",
+	"text.brightereconomy.player_shop.purchase.failure.no_items": "no stock",
+	"brightereconomy.transaction.result.success": "success",
+	"brightereconomy.transaction.result.insufficient": "insufficient money",
+	"brightereconomy.transaction.result.overflow": "too much money",
+	"brightereconomy.transaction.result.from_locked": "account source locked",
+	"brightereconomy.transaction.result.to_locked": "account destination locked"
 }

@@ -11,14 +11,15 @@ import brightspark.brightereconomy.util.Util
 import brightspark.brightereconomy.util.getSpaceFor
 import brightspark.brightereconomy.util.property
 import io.wispforest.owo.client.screens.SyncedProperty
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.ItemStack
-import kotlin.math.min
+import net.minecraft.text.Text
 
 class ShopCustomerScreenHandler(
 	syncId: Int,
 	playerInventory: PlayerInventory,
-	shopBlockEntity: ShopBlockEntity? = null
+	private val shopBlockEntity: ShopBlockEntity? = null
 ) : ShopScreenHandler(BrighterEconomy.SHOP_CUSTOMER_SCREEN_HANDLER, syncId, playerInventory, shopBlockEntity, 8, 79),
 	PlayerAccountListener {
 
@@ -34,44 +35,13 @@ class ShopCustomerScreenHandler(
 		private set
 
 	init {
-		addServerboundMessage(CustomerScreenPurchasePacket::class.java) { packet ->
-			BrighterEconomy.LOG.atInfo()
-				.setMessage("Handling shop purchase at {}")
-				.addArgument { shopBlockEntity?.pos?.toShortString() }
-				.log()
+		addServerboundMessage(CustomerScreenPurchasePacket::class.java, this::handlePurchasePacket)
+		shopBlockEntity?.addListener(this)
+	}
 
-			val player = playerInventory.player
-			val itemAmount = forSaleStack.get().count * packet.amount
-			val cost = cost.get().toLong() * packet.amount
-			val result = EconomyState.get()
-				.exchange(playerAccount.get().uuid, ownerUuid, cost, player.entityName)
-
-			if (result == TransactionExchangeResult.SUCCESS) {
-				player.sendMessage(
-					Util.messageText(
-						"screen.brightereconomy.player_shop.purchase.success",
-						itemAmount.toString(),
-						forSaleStack.get().name,
-						Util.formatMoney(cost),
-						Util.getUsername(ownerUuid) ?: "<unknown>"
-					)
-				)
-
-				var amountToGive = packet.amount
-				val maxStackSize = forSaleStack.get().maxCount
-				while (amountToGive > 0) {
-					val count = min(maxStackSize, amountToGive)
-					val stack = forSaleStack.get().copyWithCount(count)
-					val success = player.giveItemStack(stack)
-					if (success)
-						amountToGive -= count
-					else {
-						amountToGive -= (count - stack.count)
-						player.dropStack(stack)
-					}
-				}
-			}
-		}
+	override fun onClosed(player: PlayerEntity?) {
+		super.onClosed(player)
+		shopBlockEntity?.removeListener(this)
 	}
 
 	override fun handlePlayerAccountUpdate(account: PlayerAccount) = this.playerAccount.set(account)
@@ -81,4 +51,75 @@ class ShopCustomerScreenHandler(
 	fun playerCanBuy(num: Int, cost: Int, account: PlayerAccount) = !account.locked && account.money >= (num * cost)
 
 	fun sendPurchase(num: Int): Unit = sendMessage(CustomerScreenPurchasePacket(num))
+
+	fun handlePurchasePacket(packet: CustomerScreenPurchasePacket) {
+		BrighterEconomy.LOG.atInfo()
+			.setMessage("Handling shop purchase at {}")
+			.addArgument { shopBlockEntity?.pos?.toShortString() }
+			.log()
+
+		shopBlockEntity ?: run {
+			BrighterEconomy.LOG.atError().setMessage("Can't handle shop purchase - no shop block entity").log()
+			return
+		}
+
+		val player = playerInventory.player
+		val playerUuid = playerAccount.get().uuid
+		val itemAmount = forSaleStack.get().count * packet.amount
+		val cost = cost.get().toLong() * packet.amount
+		val economyState = EconomyState.get()
+
+		val simulatedExchangeResult = economyState.simulateExchange(playerUuid, ownerUuid, cost)
+		if (simulatedExchangeResult != TransactionExchangeResult.SUCCESS) {
+			player.sendMessage(failureMessageText(itemAmount, cost, simulatedExchangeResult.text))
+		}
+
+		when (val exchangeResult = economyState.exchange(playerUuid, ownerUuid, cost, player.entityName)) {
+			TransactionExchangeResult.SUCCESS -> handlePurchaseSuccess(player, itemAmount, cost)
+			// This shouldn't happen as should be caught in pre-purchase checks, but just in-case
+			else -> player.sendMessage(failureMessageText(itemAmount, cost, exchangeResult.text))
+		}
+	}
+
+	private fun handlePurchaseSuccess(player: PlayerEntity, itemAmount: Int, cost: Long) {
+		// Remove from storage
+		val stacksToGive = shopBlockEntity!!.removeStock(itemAmount)
+		if (stacksToGive.isEmpty()) {
+			player.sendMessage(
+				failureMessageText(
+					itemAmount,
+					cost,
+					Text.translatable("text.brightereconomy.player_shop.purchase.failure.no_items")
+				)
+			)
+			return
+		}
+
+		// Notify player
+		player.sendMessage(
+			Util.messageText(
+				"text.brightereconomy.player_shop.purchase.success",
+				itemAmount.toString(),
+				forSaleStack.get().name,
+				Util.formatMoney(cost),
+				Util.getUsername(ownerUuid) ?: "<unknown>"
+			)
+		)
+
+		// Give to player
+		stacksToGive.forEach {
+			player.giveItemStack(it)
+			if (!it.isEmpty)
+				player.dropStack(it)
+		}
+	}
+
+	private fun failureMessageText(itemAmount: Int, cost: Long, failureReason: Text): Text = Util.messageText(
+		"text.brightereconomy.player_shop.purchase.failure",
+		itemAmount.toString(),
+		forSaleStack.get().name,
+		Util.formatMoney(cost),
+		Util.getUsername(ownerUuid) ?: "<unknown>",
+		failureReason
+	)
 }

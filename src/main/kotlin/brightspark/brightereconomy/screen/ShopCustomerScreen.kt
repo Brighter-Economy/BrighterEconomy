@@ -61,20 +61,28 @@ class ShopCustomerScreen(handler: ShopCustomerScreenHandler, playerInv: PlayerIn
 				fun FlowLayout.buyButton(num: Int) = buyButton("Buy $num", num) {
 					sizing(Sizing.fixed(40), Sizing.fixed(12))
 					margins(Insets.of(1))
-					fun updateActive(stock: Int, cost: Int, account: PlayerAccount) {
-						active = stock >= num && handler.playerCanBuy(num, cost, account)
+					val numToBuy = { num * handler.forSaleStack.get().count }
+					fun updateActive(stock: Int, numToBuy: Int, cost: Int, account: PlayerAccount) {
+						active = stock >= numToBuy && handler.playerCanBuy(num, cost, account)
 					}
-					updateActive(handler.stock.get(), handler.cost.get(), handler.playerAccount.get())
+					updateActive(handler.stock.get(), numToBuy(), handler.cost.get(), handler.playerAccount.get())
 					updateTooltip(num, handler.playerAccount.get())
 
 					handler.forSaleStack.observe { updateTooltip(num, handler.playerAccount.get()) }
-					handler.stock.observe { updateActive(it, handler.cost.get(), handler.playerAccount.get()) }
+					handler.stock.observe {
+						updateActive(
+							it,
+							numToBuy(),
+							handler.cost.get(),
+							handler.playerAccount.get()
+						)
+					}
 					handler.cost.observe {
-						updateActive(handler.stock.get(), it, handler.playerAccount.get())
+						updateActive(handler.stock.get(), numToBuy(), it, handler.playerAccount.get())
 						updateTooltip(num, handler.playerAccount.get())
 					}
 					handler.playerAccount.observe {
-						updateActive(handler.stock.get(), handler.cost.get(), it)
+						updateActive(handler.stock.get(), numToBuy(), handler.cost.get(), it)
 						updateTooltip(num, it)
 					}
 				}
