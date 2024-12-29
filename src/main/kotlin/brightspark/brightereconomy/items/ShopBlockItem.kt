@@ -23,15 +23,23 @@ import net.minecraft.world.World
 class ShopBlockItem(block: Block, settings: Settings) : BlockItem(block, settings) {
 	companion object {
 		private const val NBT_CONTAINER = "container"
+
+		private fun getContainerPos(stack: ItemStack): BlockPos? =
+			stack.nbt?.getLong(NBT_CONTAINER)?.let { BlockPos.fromLong(it) }
 	}
 
 	override fun canPlace(context: ItemPlacementContext, state: BlockState): Boolean {
 		// Check has linked container
-		val hasContainer = context.stack.nbt?.contains(NBT_CONTAINER) ?: false
-		if (!hasContainer) {
+		getContainerPos(context.stack)?.let { containerPos ->
+			if (!context.blockPos.isWithinDistance(containerPos, 10.0)) {
+				context.player?.sendLiteralOverlayMessage("Container is too far away!", Formatting.RED)
+				return false
+			}
+		} ?: run {
 			context.player?.sendLiteralOverlayMessage("No container linked!", Formatting.RED)
+			return false
 		}
-		return hasContainer && super.canPlace(context, state)
+		return super.canPlace(context, state)
 	}
 
 	override fun useOnBlock(context: ItemUsageContext): ActionResult {
