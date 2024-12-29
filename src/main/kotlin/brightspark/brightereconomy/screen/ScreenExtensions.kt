@@ -66,7 +66,12 @@ fun FlowLayout.box(
 }
 
 fun FlowLayout.button(text: Text, onPress: (ButtonComponent) -> Unit, block: ButtonComponent.() -> Unit = {}) {
-	this.child(Components.button(text, onPress).apply(block))
+	this.child(
+		object : ButtonComponent(text, onPress) {
+			override fun shouldDrawTooltip(mouseX: Double, mouseY: Double): Boolean =
+				this.visible && this.tooltip() != null && this.isInBoundingBox(mouseX, mouseY)
+		}.apply(block)
+	)
 }
 
 fun labelComponent(text: Text, block: LabelComponent.() -> Unit = {}): LabelComponent =
