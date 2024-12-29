@@ -58,6 +58,9 @@ class ShopCustomerScreen(handler: ShopCustomerScreenHandler, playerInv: PlayerIn
 				fun FlowLayout.buyButton(text: String, num: Int, block: ButtonComponent.() -> Unit) =
 					this.button(Text.of(text), { buy(num) }, block)
 
+				fun FlowLayout.buyButton(text: String, numSupplier: () -> Int, block: ButtonComponent.() -> Unit) =
+					this.button(Text.of(text), { buy(numSupplier()) }, block)
+
 				fun FlowLayout.buyButton(num: Int) = buyButton("Buy $num", num) {
 					sizing(Sizing.fixed(40), Sizing.fixed(12))
 					margins(Insets.of(1))
@@ -111,11 +114,12 @@ class ShopCustomerScreen(handler: ShopCustomerScreenHandler, playerInv: PlayerIn
 				}
 
 				var max = 0
+				fun maxText(): String = "Buy Max ($max)"
 				fun updateMax(stock: Int, forSaleStack: ItemStack) {
 					max = min(stock, handler.playerInvSpace(forSaleStack))
 				}
 				updateMax(handler.stock.get(), handler.forSaleStack.get())
-				buyButton("Buy Max ($max)", max) {
+				buyButton(maxText(), { max }) {
 					sizing(Sizing.fixed(82), Sizing.fixed(12))
 					margins(Insets.of(1))
 					fun updateActive(cost: Int, account: PlayerAccount) {
@@ -128,7 +132,7 @@ class ShopCustomerScreen(handler: ShopCustomerScreenHandler, playerInv: PlayerIn
 						updateMax(it, handler.forSaleStack.get())
 						updateActive(handler.cost.get(), handler.playerAccount.get())
 						updateTooltip(max, handler.playerAccount.get())
-						message = Text.of("Buy Max ($max)")
+						message = Text.of(maxText())
 					}
 					handler.cost.observe {
 						updateActive(it, handler.playerAccount.get())
