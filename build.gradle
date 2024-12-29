@@ -32,7 +32,7 @@ dependencies {
 
     kapt modImplementation("io.wispforest:owo-lib:${project.owo_version}")
     include "io.wispforest:owo-sentinel:${project.owo_version}"
-    modImplementation 'me.lucko:fabric-permissions-api:0.2-SNAPSHOT'
+    modImplementation "me.lucko:fabric-permissions-api:${project.permissions_api_version}"
 
     implementation "io.ktor:ktor-server-netty:${project.ktor_version}"
     implementation "io.ktor:ktor-server-content-negotiation:${project.ktor_version}"
