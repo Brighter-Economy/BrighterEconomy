@@ -1,14 +1,12 @@
 package brightspark.brightereconomy.rest.service
 
 import brightspark.brightereconomy.economy.Transaction
+import java.util.*
 
 object TransactionService {
-	fun getTransactions(): List<Transaction> = getEconomyStateOrThrow { state ->
-		state.getTransactions().toList()
-	}
+	fun getTransactions(limit: Int): List<Transaction> =
+		getEconomyStateOrThrow { it.getTransactions().take(limit) }
 
-	fun getTransactionsForPlayer(uuidString: String): List<Transaction> {
-		val uuid = parseUuid(uuidString)
-		return getEconomyStateOrThrow { it.getAccountTransactions(uuid) }
-	}
+	fun getTransactionsForPlayer(uuid: UUID, limit: Int): List<Transaction> =
+		getEconomyStateOrThrow { it.getAccountTransactions(uuid).take(limit).toList() }
 }

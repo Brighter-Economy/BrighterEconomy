@@ -25,7 +25,8 @@ class EconomyState : PersistentState {
 	}
 
 	private val accounts = mutableMapOf<UUID, PlayerAccount>()
-	private val transactions = mutableMapOf<UUID, MutableList<Transaction>>()
+	private val transactions = mutableListOf<Transaction>()
+	// TODO: Cached transactions? e.g. last 5 for player
 
 	constructor()
 
@@ -54,74 +55,35 @@ class EconomyState : PersistentState {
 		}
 	}
 
-	fun getTransactions(): Set<Transaction> = transactions.values.flatten().toSet()
+	fun getTransactions(): List<Transaction> = transactions.toList()
 
-	fun getAccountTransactions(uuid: UUID): List<Transaction> = transactions[uuid] ?: emptyList()
-
-	private fun addTransaction(uuid: UUID, transaction: Transaction) {
-		transactions.compute(uuid) { _, list -> (list ?: mutableListOf()).apply { this += transaction } }
-	}
+	fun getAccountTransactions(uuid: UUID): Sequence<Transaction> =
+		transactions.asSequence().filter { it.uuidTo == uuid || it.uuidFrom == uuid }
 
 	private fun transactionTransfer(uuidFrom: UUID?, uuidTo: UUID?, money: Long) {
-		Transaction.of(type = TransactionType.TRANSFER, uuidFrom = uuidFrom, uuidTo = uuidTo, money = money)
-			.let { transaction ->
-				uuidFrom?.let { addTransaction(it, transaction) }
-				uuidTo?.let { addTransaction(it, transaction) }
-			}
+		transactions += Transaction.transfer(uuidFrom, uuidTo, money)
 	}
 
 	// TODO: Implement usage for shop purchases
 	private fun transactionPurchase(uuidFrom: UUID?, uuidTo: UUID, money: Long, stack: ItemStack) {
-		addTransaction(
-			uuidTo,
-			Transaction.of(
-				type = TransactionType.PURCHASE,
-				uuidFrom = uuidFrom,
-				uuidTo = uuidTo,
-				money = money,
-				itemPurchased = stack
-			)
-		)
-		uuidFrom?.let {
-			addTransaction(
-				it,
-				Transaction.of(
-					type = TransactionType.SALE,
-					uuidFrom = it,
-					uuidTo = uuidTo,
-					money = money,
-					itemPurchased = stack
-				)
-			)
-		}
+		transactions += Transaction.purchase(uuidFrom, uuidTo, money, stack)
 	}
 
 	// TODO: Implement usage for commands
 	private fun transactionModify(uuid: UUID, money: Long) {
 		if (money == 0.toLong()) return
-		addTransaction(
-			uuid,
-			Transaction.of(
-				type = TransactionType.MODIFY,
-				uuidFrom = if (money < 0) uuid else null,
-				uuidTo = if (money > 0) uuid else null,
-				money = money
-			)
-		)
+		val from = if (money < 0) uuid else null
+		val to = if (money > 0) uuid else null
+		transactions += Transaction.modify(from, to, money)
 	}
 
 	// TODO: Implement usage for commands
 	private fun transactionSet(uuid: UUID, money: Long) {
 		val diff = money - getAccount(uuid).money
-		addTransaction(
-			uuid,
-			Transaction.of(
-				type = TransactionType.MODIFY,
-				uuidFrom = if (diff < 0) uuid else null,
-				uuidTo = if (diff > 0) uuid else null,
-				money = diff
-			)
-		)
+		if (diff == 0.toLong()) return
+		val from = if (diff < 0) uuid else null
+		val to = if (diff > 0) uuid else null
+		transactions += Transaction.modify(from, to, diff)
 	}
 
 	fun simulateExchange(uuidFrom: UUID?, uuidTo: UUID?, money: Long): TransactionExchangeResult {
@@ -145,18 +107,31 @@ class EconomyState : PersistentState {
 		val from = uuidFrom?.let { getAccount(it) }
 		val to = uuidTo?.let { getAccount(it) }
 		val result = validateExchange(from, to, money)
-		if (result != TransactionExchangeResult.SUCCESS)
+		if (result != TransactionExchangeResult.SUCCESS) {
+			BrighterEconomy.LOG.atInfo()
+				.setMessage("Exchange failure {} from {} to {} initiated by {} due to {}")
+				.addArgument(money).addArgument(uuidFrom).addArgument(uuidTo).addArgument(initiatorName)
+				.addArgument(result)
+				.log()
 			return result
+		}
 
 		from?.let { setMoney(it.uuid, it.money - money) }
 		to?.let { setMoney(it.uuid, it.money + money) }
-		transactionTransfer(from?.uuid, to?.uuid, money)
 
 		BrighterEconomy.LOG.atInfo()
 			.setMessage("Exchange success {} from {} to {} initiated by {}")
 			.addArgument(money).addArgument(uuidFrom).addArgument(uuidTo).addArgument(initiatorName)
 			.log()
+
 		return TransactionExchangeResult.SUCCESS
+	}
+
+	fun transfer(uuidFrom: UUID?, uuidTo: UUID?, money: Long, initiatorName: String): TransactionExchangeResult {
+		val transactionResult = exchange(uuidFrom, uuidTo, money, initiatorName)
+		if (transactionResult == TransactionExchangeResult.SUCCESS)
+			transactionTransfer(uuidFrom, uuidTo, money)
+		return transactionResult
 	}
 
 	private fun validateExchange(from: PlayerAccount?, to: PlayerAccount?, money: Long): TransactionExchangeResult {
@@ -218,25 +193,13 @@ class EconomyState : PersistentState {
 			accounts[account.uuid] = account
 		}
 		transactions.clear()
-		nbt.getList("transactions", NbtElement.COMPOUND_TYPE.toInt()).forEach { transactionListEntryNbt ->
-			val uuid = (transactionListEntryNbt as NbtCompound).getUuid("uuid")
-			val list = transactionListEntryNbt.getList("list", NbtElement.COMPOUND_TYPE.toInt())
-				.mapTo(mutableListOf()) { Transaction.deserialize(it as NbtCompound) }
-			transactions[uuid] = list
+		nbt.getList("transactions", NbtElement.COMPOUND_TYPE.toInt()).forEach {
+			transactions += Transaction.deserialize(it as NbtCompound)
 		}
 	}
 
 	override fun writeNbt(nbt: NbtCompound): NbtCompound = nbt.apply {
 		put("accounts", NbtList().apply { accounts.values.forEach { add(it.writeNbt(NbtCompound())) } })
-		put("transactions", NbtList().apply {
-			transactions.forEach { (uuid, list) ->
-				add(NbtCompound().apply {
-					putUuid("uuid", uuid)
-					put("list", NbtList().apply {
-						list.forEach { add(it.writeNbt(NbtCompound())) }
-					})
-				})
-			}
-		})
+		put("transactions", NbtList().apply { transactions.forEach { add(it.writeNbt(NbtCompound())) } })
 	}
 }

@@ -13,12 +13,9 @@ object AccountService {
 			.toList()
 	}
 
-	fun getAccount(uuidString: String): PlayerAccountDto {
-		val uuid = parseUuid(uuidString)
-		return getEconomyStateOrThrow { state ->
-			val userCache = getUserCache()
-			state.getAccount(uuid).toDto(userCache.getUsername(uuid))
-		}
+	fun getAccount(uuid: UUID): PlayerAccountDto = getEconomyStateOrThrow { state ->
+		val userCache = getUserCache()
+		state.getAccount(uuid).toDto(userCache.getUsername(uuid))
 	}
 
 	private fun getUserCache(): Optional<UserCache> =

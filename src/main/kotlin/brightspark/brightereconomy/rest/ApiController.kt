@@ -8,6 +8,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.util.*
+import java.util.*
 
 object ApiController {
 	fun routes(route: Route): Unit = route.run {
@@ -22,7 +23,8 @@ object ApiController {
 			}
 
 			put("{key}") {
-				ConfigService.setConfig(call.parameters.getOrFail("key"), call.receiveText())
+				val key: String by call.parameters
+				ConfigService.setConfig(key, call.receiveText())
 				call.respond(HttpStatusCode.OK)
 			}
 		}
@@ -32,17 +34,24 @@ object ApiController {
 				call.respond(AccountService.getAccounts())
 			}
 			get("{uuid}") {
-				call.respond(AccountService.getAccount(call.parameters.getOrFail("uuid")))
+				val uuid: UUID by call.parameters
+				call.respond(AccountService.getAccount(uuid))
 			}
 		}
 
 		route("/transactions") {
 			get {
-				call.respond(TransactionService.getTransactions())
+				val limit: Int = call.queryParameters.getOptional("limit", 10)
+				call.respond(TransactionService.getTransactions(limit))
 			}
 			get("{uuid}") {
-				call.respond(TransactionService.getTransactionsForPlayer(call.parameters.getOrFail("uuid")))
+				val uuid: UUID by call.parameters
+				val limit: Int = call.queryParameters.getOptional("limit", 10)
+				call.respond(TransactionService.getTransactionsForPlayer(uuid, limit))
 			}
 		}
 	}
+
+	private inline fun <reified R : Any> Parameters.getOptional(name: String, default: R): R =
+		if (name in this) this.getOrFail<R>(name) else default
 }
