@@ -5,10 +5,13 @@ import com.mojang.brigadier.arguments.ArgumentType
 import com.mojang.brigadier.builder.ArgumentBuilder
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.builder.RequiredArgumentBuilder
+import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.tree.LiteralCommandNode
 import me.lucko.fabric.api.permissions.v0.Permissions
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.command.CommandManager
 import net.minecraft.server.command.ServerCommandSource
+import java.util.*
 
 abstract class Command(
 	private val name: String,
@@ -57,6 +60,9 @@ abstract class Command(
 
 		fun <T : ArgumentBuilder<ServerCommandSource, T>> T.requiresPermission(permission: String, level: Int): T =
 			this.requires(Permissions.require("$COMMAND_PERM.$permission", level))
+
+		fun CommandContext<ServerCommandSource>.getPlayer(uuid: UUID): PlayerEntity? =
+			this.source.server.playerManager.getPlayer(uuid)
 	}
 
 	protected val aliases: MutableList<String> = mutableListOf()

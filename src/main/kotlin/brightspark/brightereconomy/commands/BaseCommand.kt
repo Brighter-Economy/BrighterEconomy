@@ -11,6 +11,7 @@ object BaseCommand : Command(BrighterEconomy.MOD_ID, {
 	thenCommand(LockCommand)
 	thenCommand(UnlockCommand)
 	thenCommand(SendCommand)
+	thenCommand(RequestCommand)
 }) {
 	init {
 		BrighterEconomy.CONFIG.commandAliases().asSequence()
