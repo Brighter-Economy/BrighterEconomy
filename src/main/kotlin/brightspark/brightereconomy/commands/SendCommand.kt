@@ -25,7 +25,9 @@ object SendCommand : Command("send", {
 		val amount = LongArgumentType.getLong(ctx, "amount")
 		val result = EconomyService.transfer(ctx.source.player?.uuid, player.id, amount, ctx.source.name)
 		if (result == TransactionExchangeResult.SUCCESS) {
-			ctx.source.sendMessage(Text.of("Sent ${Util.formatMoney(amount)} to ${player.name}"))
+			val formattedAmount = Util.formatMoney(amount)
+			ctx.source.sendMessage(Text.of("Sent $formattedAmount to ${player.name}"))
+			ctx.getPlayer(player.id)?.sendMessage(Text.of("${ctx.source.name} has sent you $formattedAmount"))
 			return 1
 		} else {
 			ctx.source.sendMessage(
