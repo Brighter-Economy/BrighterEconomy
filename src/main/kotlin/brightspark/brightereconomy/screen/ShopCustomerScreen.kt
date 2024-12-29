@@ -63,7 +63,7 @@ class ShopCustomerScreen(handler: ShopCustomerScreenHandler, playerInv: PlayerIn
 					margins(Insets.of(1))
 					val numToBuy = { num * handler.forSaleStack.get().count }
 					fun updateActive(stock: Int, numToBuy: Int, cost: Int, account: PlayerAccount) {
-						active = stock >= numToBuy && handler.playerCanBuy(num, cost, account)
+						active = stock >= numToBuy && handler.playerCanBuy(numToBuy, cost, account)
 					}
 					updateActive(handler.stock.get(), numToBuy(), handler.cost.get(), handler.playerAccount.get())
 					updateTooltip(num, handler.playerAccount.get())

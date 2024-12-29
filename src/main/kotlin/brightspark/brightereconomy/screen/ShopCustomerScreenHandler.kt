@@ -44,7 +44,10 @@ class ShopCustomerScreenHandler(
 		shopBlockEntity?.removeListener(this)
 	}
 
-	override fun handlePlayerAccountUpdate(account: PlayerAccount) = this.playerAccount.set(account)
+	override fun handlePlayerAccountUpdate(account: PlayerAccount) {
+		if (account.uuid == playerInventory.player.uuid)
+			this.playerAccount.set(account)
+	}
 
 	fun playerInvSpace(forSaleStack: ItemStack): Int = playerInventory.getSpaceFor(forSaleStack)
 
