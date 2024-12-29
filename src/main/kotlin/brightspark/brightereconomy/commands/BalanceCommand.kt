@@ -3,6 +3,7 @@ package brightspark.brightereconomy.commands
 import brightspark.brightereconomy.commands.argtype.PlayerAccountArgumentType
 import brightspark.brightereconomy.commands.argtype.PlayerAccountArgumentType.Companion.playerAccountArg
 import brightspark.brightereconomy.commands.argtype.PlayerProfileAndAccount
+import brightspark.brightereconomy.economy.EconomyService
 import brightspark.brightereconomy.economy.TransactionExchangeResult
 import brightspark.brightereconomy.util.Util
 import com.mojang.brigadier.arguments.LongArgumentType
@@ -52,7 +53,7 @@ object BalanceCommand : Command("balance", {
 		val playerId = player?.profile?.id
 		val targetIsSelf = playerId?.equals(ctx.source.player?.id) ?: true
 		return ctx.source.player?.let { playerEntity ->
-			val account = ctx.getEconomyState().getAccount(playerEntity.uuid)
+			val account = EconomyService.getAccount(playerEntity.uuid)
 			val money = Util.formatMoney(account.money)
 			val textString = "${if (!targetIsSelf) "${player?.profile?.name}'s " else ""}Balance: $money"
 			var text = Text.literal(textString)
@@ -72,12 +73,7 @@ object BalanceCommand : Command("balance", {
 		val playerId = player.profile.id
 		val playerName = player.profile.name
 		val amount = LongArgumentType.getLong(ctx, "amount")
-		val result = ctx.getEconomyState().exchange(
-			if (add) null else playerId,
-			if (add) playerId else null,
-			amount,
-			ctx.source.name
-		)
+		val result = EconomyService.modify(playerId, add, amount, ctx.source.name)
 
 		val amountFormatted = Util.formatMoney(amount)
 		if (result == TransactionExchangeResult.SUCCESS) {
@@ -104,8 +100,8 @@ object BalanceCommand : Command("balance", {
 	private fun setBalance(ctx: CommandContext<ServerCommandSource>): Int {
 		val player = PlayerAccountArgumentType.get(ctx, "player")
 		val amount = LongArgumentType.getLong(ctx, "amount")
-		ctx.getEconomyState().setMoney(player.profile.id, amount, ctx.source.name)
-		ctx.source.sendMessage(Text.of("Sent ${Util.formatMoney(amount)} to ${player.profile.name}"))
+		EconomyService.set(player.profile.id, amount, ctx.source.name)
+		ctx.source.sendMessage(Text.of("Set ${Util.formatMoney(amount)} to ${player.profile.name}"))
 		return 1
 	}
 }

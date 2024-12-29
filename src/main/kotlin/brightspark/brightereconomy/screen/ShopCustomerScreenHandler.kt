@@ -2,7 +2,7 @@ package brightspark.brightereconomy.screen
 
 import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.blocks.ShopBlockEntity
-import brightspark.brightereconomy.economy.EconomyState
+import brightspark.brightereconomy.economy.EconomyService
 import brightspark.brightereconomy.economy.PlayerAccount
 import brightspark.brightereconomy.economy.PlayerAccountListener
 import brightspark.brightereconomy.economy.TransactionExchangeResult
@@ -24,7 +24,7 @@ class ShopCustomerScreenHandler(
 	PlayerAccountListener {
 
 	var playerAccount: SyncedProperty<PlayerAccount> =
-		property(EconomyState.get().getAccount(playerInventory.player.uuid))
+		property(EconomyService.getAccount(playerInventory.player.uuid))
 		private set
 	var forSaleStack: SyncedProperty<ItemStack> =
 		property(shopBlockEntity, ShopBlockEntity::getStack, ShopBlockEntity::setStack, ItemStack.EMPTY)
@@ -70,14 +70,16 @@ class ShopCustomerScreenHandler(
 		val playerUuid = playerAccount.get().uuid
 		val itemAmount = forSaleStack.get().count * packet.amount
 		val cost = cost.get().toLong() * packet.amount
-		val economyState = EconomyState.get()
 
-		val simulatedExchangeResult = economyState.simulateExchange(playerUuid, ownerUuid, cost)
+		val simulatedExchangeResult = EconomyService.simulateExchange(playerUuid, ownerUuid, cost)
 		if (simulatedExchangeResult != TransactionExchangeResult.SUCCESS) {
 			player.sendMessage(failureMessageText(itemAmount, cost, simulatedExchangeResult.text))
 		}
 
-		when (val exchangeResult = economyState.exchange(playerUuid, ownerUuid, cost, player.entityName)) {
+		val exchangeResult = EconomyService.purchase(
+			playerUuid, ownerUuid, cost, forSaleStack.get().copyWithCount(itemAmount), player.entityName
+		)
+		when (exchangeResult) {
 			TransactionExchangeResult.SUCCESS -> handlePurchaseSuccess(player, itemAmount, cost)
 			// This shouldn't happen as should be caught in pre-purchase checks, but just in-case
 			else -> player.sendMessage(failureMessageText(itemAmount, cost, exchangeResult.text))

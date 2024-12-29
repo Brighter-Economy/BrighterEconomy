@@ -1,7 +1,7 @@
 package brightspark.brightereconomy.commands.argtype
 
 import brightspark.brightereconomy.BrighterEconomy
-import brightspark.brightereconomy.economy.EconomyState
+import brightspark.brightereconomy.economy.EconomyService
 import brightspark.brightereconomy.economy.PlayerAccount
 import com.mojang.authlib.GameProfile
 import com.mojang.brigadier.StringReader
@@ -33,7 +33,7 @@ class PlayerAccountArgumentType : ArgumentType<PlayerAccountArgument> {
 		val string = reader.string.substring(cursorStart, reader.cursor)
 		return PlayerAccountArgument { source ->
 			source.server.userCache!!.findByName(string)
-				.map { PlayerProfileAndAccount(it, EconomyState.get(source.server).getAccount(it.id)) }
+				.map { PlayerProfileAndAccount(it, EconomyService.getAccount(it.id)) }
 				.orElseThrow { EntityArgumentType.PLAYER_NOT_FOUND_EXCEPTION.createWithContext(reader) }
 		}
 	}
