@@ -81,8 +81,11 @@ object EconomyService {
 	}
 
 	fun set(uuid: UUID, money: Long, initiatorName: String) {
-		EconomyState.get().setMoney(uuid, money, initiatorName)
-		transactionSet(uuid, money)
+		val state = EconomyState.get()
+		val moneyBefore = state.getAccount(uuid).money
+		state.setMoney(uuid, money, initiatorName)
+		val diff = state.getAccount(uuid).money - moneyBefore
+		transactionModify(uuid, diff)
 	}
 
 	fun lockAccount(uuid: UUID) {
@@ -135,14 +138,5 @@ object EconomyService {
 		val from = if (money < 0) uuid else null
 		val to = if (money > 0) uuid else null
 		EconomyState.get().addTransaction(Transaction.modify(from, to, money))
-	}
-
-	private fun transactionSet(uuid: UUID, money: Long) {
-		val state = EconomyState.get()
-		val diff = money - state.getAccount(uuid).money
-		if (diff == 0.toLong()) return
-		val from = if (diff < 0) uuid else null
-		val to = if (diff > 0) uuid else null
-		state.addTransaction(Transaction.modify(from, to, diff))
 	}
 }

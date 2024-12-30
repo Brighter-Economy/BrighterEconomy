@@ -2,6 +2,7 @@ package brightspark.brightereconomy.rest
 
 import brightspark.brightereconomy.rest.service.AccountService
 import brightspark.brightereconomy.rest.service.ConfigService
+import brightspark.brightereconomy.rest.service.ItemService
 import brightspark.brightereconomy.rest.service.TransactionService
 import io.ktor.http.*
 import io.ktor.server.request.*
@@ -48,6 +49,12 @@ object ApiController {
 				val uuid: UUID by call.parameters
 				val limit: Int = call.queryParameters.getOptional("limit", 10)
 				call.respond(TransactionService.getTransactionsForPlayer(uuid, limit))
+			}
+		}
+
+		route("/items") {
+			get {
+				call.respond(ItemService.getAllItemKeys())
 			}
 		}
 	}
