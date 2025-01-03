@@ -1,5 +1,6 @@
 package brightspark.brightereconomy.rest
 
+import brightspark.brightereconomy.rest.dto.Sort
 import brightspark.brightereconomy.rest.service.AccountService
 import brightspark.brightereconomy.rest.service.ConfigService
 import brightspark.brightereconomy.rest.service.ItemService
@@ -43,12 +44,14 @@ object ApiController {
 		route("/transactions") {
 			get {
 				val limit: Int = call.queryParameters.getOptional("limit", 10)
-				call.respond(TransactionService.getTransactions(limit))
+				val sort: Sort = call.queryParameters.getOptional("sort", Sort.DESC)
+				call.respond(TransactionService.getTransactions(limit, sort))
 			}
 			get("{uuid}") {
 				val uuid: UUID by call.parameters
 				val limit: Int = call.queryParameters.getOptional("limit", 10)
-				call.respond(TransactionService.getTransactionsForPlayer(uuid, limit))
+				val sort: Sort = call.queryParameters.getOptional("sort", Sort.DESC)
+				call.respond(TransactionService.getTransactionsForPlayer(uuid, limit, sort))
 			}
 		}
 

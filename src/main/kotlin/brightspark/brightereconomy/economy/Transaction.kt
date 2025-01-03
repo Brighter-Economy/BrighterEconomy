@@ -1,16 +1,10 @@
-@file:UseSerializers(UuidSerializer::class, ItemStackSerializer::class)
-
 package brightspark.brightereconomy.economy
 
-import brightspark.brightereconomy.rest.serializer.ItemStackSerializer
-import brightspark.brightereconomy.rest.serializer.UuidSerializer
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.UseSerializers
+import brightspark.brightereconomy.rest.dto.TransactionDto
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import java.util.*
 
-@Serializable
 data class Transaction(
 	val id: UUID = UUID.randomUUID(),
 	val type: TransactionType,
@@ -75,4 +69,17 @@ data class Transaction(
 		itemPurchased?.let { put("itemPurchased", it.writeNbt(NbtCompound())) }
 		putLong("timestamp", timestamp)
 	}
+
+	fun toDto(nameFrom: String?, nameTo: String?): TransactionDto = TransactionDto(
+		id = id,
+		type = type,
+		participants = participants,
+		uuidFrom = uuidFrom,
+		uuidTo = uuidTo,
+		nameFrom = nameFrom,
+		nameTo = nameTo,
+		money = money,
+		itemPurchased = itemPurchased,
+		timestamp = timestamp
+	)
 }
