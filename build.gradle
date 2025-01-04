@@ -38,6 +38,8 @@ dependencies {
     implementation "io.ktor:ktor-server-content-negotiation:${project.ktor_version}"
     implementation "io.ktor:ktor-serialization-kotlinx-json:${project.ktor_version}"
     implementation "io.ktor:ktor-server-auth:${project.ktor_version}"
+    implementation "io.ktor:ktor-server-openapi:${project.ktor_version}"
+    implementation "io.ktor:ktor-server-swagger:${project.ktor_version}"
 }
 
 loom {

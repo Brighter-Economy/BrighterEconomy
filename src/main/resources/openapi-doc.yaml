@@ -1,0 +1,212 @@
+openapi: 3.0.3
+info:
+  title: Brighter Economy API
+  description: Backend API for the Brighter Economy dashboard
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:25570/api
+security:
+  - BasicAuth: [ ]
+
+paths:
+  /user-info:
+    get:
+      description: Gets basic user info if successfully authenticated
+      tags: [ user-info ]
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                Success:
+                  value: admin
+                Failure:
+                  value: null
+  /accounts:
+    get:
+      description: Gets all accounts
+      tags: [ accounts ]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Account"
+  /accounts/{uuid}:
+    get:
+      description: Gets an account by player UUID
+      tags: [ accounts ]
+      parameters:
+        - in: path
+          name: uuid
+          schema:
+            type: uuid
+          required: true
+          description: Player UUID
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+  /accounts/{uuid}/name:
+    get:
+      description: Gets an account's name by player UUID
+      tags: [ accounts ]
+      parameters:
+        - in: path
+          name: uuid
+          schema:
+            type: uuid
+          required: true
+          description: Player UUID
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /transactions:
+    get:
+      description: Gets all transactions
+      tags: [ transactions ]
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            format: int32
+          required: false
+          description: Maximum number of values to retrieve (default 10)
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [ asc, desc ]
+          required: false
+          description: Whether to sort the transactions by timestamp ascending or descending (default "desc")
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+  /transactions/{uuid}:
+    get:
+      description: Gets all transactions by player UUID
+      tags: [ transactions ]
+      parameters:
+        - in: path
+          name: uuid
+          schema:
+            type: uuid
+          required: true
+          description: Player UUID
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            format: int32
+          required: false
+          description: Maximum number of values to retrieve (default 10)
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [ asc, desc ]
+          required: false
+          description: Whether to sort the transactions by timestamp ascending or descending (default "desc")
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+  /items:
+    get:
+      description: Gets all item IDs
+      tags: [ items ]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    Account:
+      type: object
+      properties:
+        uuid:
+          type: uuid
+        username:
+          type: string
+        locked:
+          type: boolean
+        money:
+          type: integer
+          format: int64
+        moneyFormatted:
+          type: string
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: uuid
+        type:
+          type: string
+          enum: [ TRANSFER, PURCHASE, MODIFY ]
+        participants:
+          type: string
+          enum: [ PLAYERS, TO_NULL, FROM_NULL ]
+        uuidFrom:
+          type: uuid
+          nullable: true
+        uuidTo:
+          type: uuid
+          nullable: true
+        nameFrom:
+          type: string
+          nullable: true
+        nameTo:
+          type: string
+          nullable: true
+        money:
+          type: integer
+          format: int64
+        itemPurchased:
+          type: object
+          properties:
+            item:
+              type: string
+            count:
+              type: integer
+              format: int32
+            nbt:
+              type: string
+              nullable: true
+        timestamp:
+          type: integer
+          format: int64
