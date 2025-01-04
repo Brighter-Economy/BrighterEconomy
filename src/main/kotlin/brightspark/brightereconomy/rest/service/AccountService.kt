@@ -1,6 +1,7 @@
 package brightspark.brightereconomy.rest.service
 
 import brightspark.brightereconomy.BrighterEconomy
+import brightspark.brightereconomy.economy.EconomyService
 import brightspark.brightereconomy.rest.dto.PlayerAccountDto
 import net.minecraft.util.UserCache
 import java.util.*
@@ -16,6 +17,11 @@ object AccountService {
 	fun getAccount(uuid: UUID): PlayerAccountDto = getEconomyStateOrThrow { state ->
 		val userCache = getUserCache()
 		state.getAccount(uuid).toDto(userCache.getUsername(uuid))
+	}
+
+	fun setBalance(uuid: UUID, money: Long, loginUsername: String) {
+		throwIfEconomyStateNull()
+		EconomyService.set(uuid, money, loginUsername)
 	}
 
 	private fun getUserCache(): Optional<UserCache> =

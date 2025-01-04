@@ -56,9 +56,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Account"
-  /accounts/{uuid}/name:
-    get:
-      description: Gets an account's name by player UUID
+  /accounts/{uuid}/balance:
+    put:
+      description: Set an account's balance by player UUID
       tags: [ accounts ]
       parameters:
         - in: path
@@ -67,13 +67,17 @@ paths:
             type: uuid
           required: true
           description: Player UUID
+      requestBody:
+        description: The amount of money to set the account's balance to
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: integer
+              format: int64
       responses:
         "200":
           description: OK
-          content:
-            text/plain:
-              schema:
-                type: string
   /transactions:
     get:
       description: Gets all transactions
