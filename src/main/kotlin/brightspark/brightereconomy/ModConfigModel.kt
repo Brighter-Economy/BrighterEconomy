@@ -16,6 +16,14 @@ class ModConfigModel {
 	var apiPort: Int = 25570
 
 	@JvmField
+	@ExcludeFromScreen
+	var loginUsername: String = "admin"
+
+	@JvmField
+	@ExcludeFromScreen
+	var loginPassword: String = "admin"
+
+	@JvmField
 	@RestartRequired
 	var commandAliases: List<String> = listOf("be")
 
