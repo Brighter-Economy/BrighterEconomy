@@ -8,10 +8,9 @@ import io.ktor.server.engine.*
 import io.ktor.server.http.content.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.openapi.*
-import io.ktor.server.plugins.swagger.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import net.fabricmc.loader.api.FabricLoader
 import java.util.*
 
 object RestController {
@@ -67,8 +66,9 @@ object RestController {
 				}
 //				staticResources("/", "web")
 
-				openAPI(path = "openapi", swaggerFile = "openapi-doc.yaml")
-				swaggerUI(path = "swagger", swaggerFile = "openapi-doc.yaml")
+				if (FabricLoader.getInstance().isDevelopmentEnvironment) {
+					SwaggerSupport.swaggerRoutes(this)
+				}
 			}
 		}.start().engine
 }
