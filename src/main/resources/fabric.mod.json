@@ -32,7 +32,6 @@
 	},
 	"accessWidener": "brightereconomy.accesswidener",
 	"mixins": [
-		"brightereconomy.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.16.9",
