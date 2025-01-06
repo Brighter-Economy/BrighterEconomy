@@ -18,6 +18,7 @@ class ShopOwnerScreenHandler(
 	shopBlockEntity: ShopBlockEntity? = null
 ) : ShopScreenHandler(BrighterEconomy.SHOP_OWNER_SCREEN_HANDLER, syncId, playerInventory, shopBlockEntity, 8, 71) {
 
+	private val shopSlotId: Int
 	var cost: SyncedProperty<Int> = property(shopBlockEntity, ShopBlockEntity::cost, 0)
 
 	init {
@@ -28,13 +29,13 @@ class ShopOwnerScreenHandler(
 			}
 		}
 
-		addSlot(Slot(shopBlockEntity ?: SimpleInventory(1), 0, 39, 42))
+		shopSlotId = addSlot(Slot(shopBlockEntity ?: SimpleInventory(1), 0, 39, 42)).id
 	}
 
-	fun getShopStack(): ItemStack = slots[0].stack
+	fun getShopStack(): ItemStack = slots[shopSlotId].stack
 
 	override fun onSlotClick(slotIndex: Int, button: Int, actionType: SlotActionType, player: PlayerEntity) {
-		if (slotIndex == 0 && (actionType == SlotActionType.PICKUP || actionType == SlotActionType.QUICK_MOVE)) {
+		if (slotIndex == shopSlotId && (actionType == SlotActionType.PICKUP || actionType == SlotActionType.QUICK_MOVE)) {
 			val slot = slots[slotIndex]
 			val heldStack = cursorStack
 			if (cursorStack.isEmpty)
@@ -54,8 +55,8 @@ class ShopOwnerScreenHandler(
 	}
 
 	override fun quickMove(player: PlayerEntity?, slot: Int): ItemStack {
-		if (slot != 0) {
-			val shopSlot = slots[0]
+		if (slot != shopSlotId) {
+			val shopSlot = slots[shopSlotId]
 			shopSlot.stack = slots[slot].stack
 			shopSlot.markDirty()
 		}
