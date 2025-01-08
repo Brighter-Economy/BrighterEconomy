@@ -25,6 +25,43 @@ paths:
                   value: admin
                 Failure:
                   value: null
+  /configs:
+    get:
+      description: Gets all configs
+      tags: [ configs ]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Config"
+  /configs/{key}:
+    get:
+      description: Gets a config by its key
+      tags: [ configs ]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Config"
+    put:
+      description: Sets a config by its key
+      tags: [ configs ]
+      requestBody:
+        description: The config value
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        "200":
+          description: OK
   /accounts:
     get:
       description: Gets all accounts
@@ -160,6 +197,21 @@ components:
       type: http
       scheme: basic
   schemas:
+    Config:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+        type:
+          type: string
+          enum: [ BOOLEAN, INTEGER, LONG, STRING, ENUM, LIST ]
+        possibleValues:
+          type: array
+          nullable: true
+          items:
+            type: string
     Account:
       type: object
       properties:

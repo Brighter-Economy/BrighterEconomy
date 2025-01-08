@@ -15,14 +15,14 @@ import java.util.*
 
 object ApiController {
 	fun routes(route: Route): Unit = route.run {
-		route("/config") {
+		route("/configs") {
 			get {
-				call.respond(ConfigService.getConfigsString())
+				call.respond(ConfigService.getConfigs())
 			}
 
-			put {
-				ConfigService.setConfigs(call.receiveText())
-				call.respond(HttpStatusCode.OK)
+			get("/{key}") {
+				val key: String by call.parameters
+				call.respond(ConfigService.getConfig(key))
 			}
 
 			put("/{key}") {

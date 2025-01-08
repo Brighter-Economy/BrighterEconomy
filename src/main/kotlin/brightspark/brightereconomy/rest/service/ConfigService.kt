@@ -1,51 +1,66 @@
 package brightspark.brightereconomy.rest.service
 
 import brightspark.brightereconomy.BrighterEconomy
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
+import brightspark.brightereconomy.rest.dto.ConfigDto
+import brightspark.brightereconomy.rest.dto.ConfigValueType
 import io.ktor.server.plugins.*
+import io.wispforest.owo.config.Option
 import io.wispforest.owo.config.Option.Key
-import net.minecraft.util.JsonHelper
 
 object ConfigService {
-	fun getConfigsString(): String {
-		val json = JsonObject()
-		BrighterEconomy.CONFIG.allOptions().values.forEach { option ->
-			val name = option.key().name()
-			when (val value = option.value()) {
-				is Boolean -> json.addProperty(name, value)
-				is Number -> json.addProperty(name, value)
-				is String -> json.addProperty(name, value)
-				is List<*> -> {
-					when {
-						value.isEmpty() -> json.add(name, JsonArray())
-						value.first() is String -> json.add(name, JsonArray().also { array ->
-							value.forEach { array.add(it as String) }
-						})
-						else -> BrighterEconomy.LOG.warn(
-							"Config '{}' list value of type {} isn't supported",
-							name, value::class.typeParameters.first().name
-						)
-					}
-				}
-				else -> BrighterEconomy.LOG.warn(
-					"Config '{}' value of type {} isn't supported",
-					name, value::class.qualifiedName
-				)
-			}
-		}
-		return JsonHelper.toSortedString(json)
-	}
+	fun getConfigs(): List<ConfigDto> = BrighterEconomy.CONFIG.allOptions().values.map(::optionToConfigDto)
 
-	fun setConfigs(configsString: String) {
-		JsonHelper.deserialize(configsString).entrySet().forEach { (key, value) ->
-			BrighterEconomy.CONFIG.optionForKey<Any>(Key(key))?.set(value)
-		}
-	}
+	fun getConfig(key: String): ConfigDto = BrighterEconomy.CONFIG.optionForKey<Any>(Key(key))
+		?.let(::optionToConfigDto)
+		?: run { throw NotFoundException("Config '${key}' not found") }
 
 	fun setConfig(key: String, value: String) {
-		BrighterEconomy.CONFIG.optionForKey<Any>(Key(key))?.set(value) ?: run {
-			throw NotFoundException("Config '${key}' not found")
+		BrighterEconomy.CONFIG.optionForKey<Any>(Key(key))
+			?.let { option ->
+				option.set(
+					when (val clazz = option.clazz()) {
+						String::class.java -> value
+						Boolean::class.java -> value.toBoolean()
+						Int::class.java -> value.toInt()
+						Long::class.java -> value.toLong()
+						List::class.java -> value.trimStart('[').trimEnd(']').split(", ")
+						else -> when {
+							clazz.isEnum -> clazz.enumConstants.find { it.toString().equals(value, false) }
+							else -> error("Config '${key}' value of type ${clazz.name} isn't supported")
+						}
+					}
+				)
+			}
+			?: run { throw NotFoundException("Config '${key}' not found") }
+	}
+
+	fun optionToConfigDto(option: Option<*>): ConfigDto {
+		val name = option.key().name()
+		var value = option.value().toString()
+		var possibleValues: List<String>? = null
+		val type = when (val clazz = option.clazz()) {
+			String::class.java -> ConfigValueType.STRING
+			Boolean::class.java -> ConfigValueType.BOOLEAN
+			Int::class.java -> ConfigValueType.INTEGER
+			Long::class.java -> ConfigValueType.LONG
+			List::class.java -> {
+				val listValue = option.value() as List<*>
+				value = when {
+					listValue.isEmpty() -> "[]"
+					listValue.first() is String ->
+						listValue.joinToString(separator = ", ", prefix = "[", postfix = "]")
+					else -> error("Config '$name' list value of type ${listValue::class.typeParameters.first().name} isn't supported")
+				}
+				ConfigValueType.LIST
+			}
+			else -> when {
+				clazz.isEnum -> {
+					possibleValues = clazz.enumConstants.map { it.toString() }
+					ConfigValueType.ENUM
+				}
+				else -> error("Config '${name}' value of type ${clazz.name} isn't supported")
+			}
 		}
+		return ConfigDto(name, value, type, possibleValues)
 	}
 }
