@@ -43,30 +43,27 @@ object ApiController {
 					call.respond(AccountService.getAccount(uuid))
 				}
 
-				route("/balance") {
-					put {
-						val uuid: UUID by call.parameters
-						val money: Long = call.receive()
-						val username: String = call.principal<UserIdPrincipal>()!!.name
-						AccountService.setBalance(uuid, money, username)
-						call.respond(HttpStatusCode.OK)
-					}
+				get("/transactions") {
+					val uuid: UUID by call.parameters
+					val limit: Int = call.queryParameters.getOptional("limit", 10)
+					val sort: Sort = call.queryParameters.getOptional("sort", Sort.DESC)
+					call.respond(TransactionService.getTransactionsForPlayer(uuid, limit, sort))
+				}
+
+				put("/balance") {
+					val uuid: UUID by call.parameters
+					val money: Long = call.receive()
+					val username: String = call.principal<UserIdPrincipal>()!!.name
+					AccountService.setBalance(uuid, money, username)
+					call.respond(HttpStatusCode.OK)
 				}
 			}
 		}
 
-		route("/transactions") {
-			get {
-				val limit: Int = call.queryParameters.getOptional("limit", 10)
-				val sort: Sort = call.queryParameters.getOptional("sort", Sort.DESC)
-				call.respond(TransactionService.getTransactions(limit, sort))
-			}
-			get("/{uuid}") {
-				val uuid: UUID by call.parameters
-				val limit: Int = call.queryParameters.getOptional("limit", 10)
-				val sort: Sort = call.queryParameters.getOptional("sort", Sort.DESC)
-				call.respond(TransactionService.getTransactionsForPlayer(uuid, limit, sort))
-			}
+		get("/transactions") {
+			val limit: Int = call.queryParameters.getOptional("limit", 10)
+			val sort: Sort = call.queryParameters.getOptional("sort", Sort.DESC)
+			call.respond(TransactionService.getTransactions(limit, sort))
 		}
 
 		route("/items") {
