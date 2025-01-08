@@ -5,20 +5,11 @@ import brightspark.brightereconomy.economy.EconomyState
 import brightspark.brightereconomy.economy.PlayerAccount
 import brightspark.brightereconomy.economy.PlayerAccountListener
 import brightspark.brightereconomy.economy.Transaction
-import brightspark.brightereconomy.persistance.StorageType.WORLD_NBT
 import java.util.*
 
 interface EconomyStorage {
-	companion object : StorageProvider<EconomyStorage> {
-		private var storage: EconomyStorage? = null
-
-		override fun getStorage(): EconomyStorage = storage ?: run {
-			storage = when (val type = BrighterEconomy.CONFIG.storageType()) {
-				WORLD_NBT -> EconomyState.get()
-				else -> error("No EconomyStorage for type $type")
-			}
-			storage!!
-		}
+	companion object : BaseStorageProvider<EconomyStorage>() {
+		override fun createPersistentState(): EconomyStorage = EconomyState.get()
 
 		fun onPlayerAccountUpdated(account: PlayerAccount) = BrighterEconomy.SERVER.ifPresent { server ->
 			server.playerManager.playerList.asSequence()

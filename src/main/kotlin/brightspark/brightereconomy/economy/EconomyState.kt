@@ -1,26 +1,15 @@
 package brightspark.brightereconomy.economy
 
-import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.persistance.EconomyStorage
+import brightspark.brightereconomy.persistance.PersistentStateProvider
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtElement
 import net.minecraft.nbt.NbtList
-import net.minecraft.server.MinecraftServer
 import net.minecraft.world.PersistentState
-import net.minecraft.world.World
 import java.util.*
 
 class EconomyState : PersistentState, EconomyStorage {
-	companion object {
-		fun get(): EconomyState = BrighterEconomy.SERVER.map { get(it) }.orElseThrow()
-
-		fun get(server: MinecraftServer): EconomyState {
-			val manager = server.getWorld(World.OVERWORLD)!!.persistentStateManager
-			val state = manager.getOrCreate(::EconomyState, ::EconomyState, BrighterEconomy.MOD_ID)
-			state.markDirty()
-			return state
-		}
-	}
+	companion object : PersistentStateProvider<EconomyState>("economy", ::EconomyState, ::EconomyState)
 
 	private val accounts = mutableMapOf<UUID, PlayerAccount>()
 	private val transactions = mutableListOf<Transaction>()
@@ -37,12 +26,13 @@ class EconomyState : PersistentState, EconomyStorage {
 	override fun getAccount(uuid: UUID): PlayerAccount = accounts.getOrElse(uuid) { PlayerAccount(uuid = uuid) }
 
 	override fun updateAccount(uuid: UUID, accountConsumer: (PlayerAccount?) -> PlayerAccount): PlayerAccount =
-		accounts.compute(uuid) { _, account -> accountConsumer(account) }!!
+		accounts.compute(uuid) { _, account -> accountConsumer(account) }!!.also { markDirty() }
 
 	override fun getTransactions(): Sequence<Transaction> = transactions.asSequence()
 
 	override fun addTransaction(transaction: Transaction) {
 		transactions += transaction
+		markDirty()
 	}
 
 	private fun readNbt(nbt: NbtCompound) {
