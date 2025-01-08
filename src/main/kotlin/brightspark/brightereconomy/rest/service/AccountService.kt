@@ -7,16 +7,17 @@ import net.minecraft.util.UserCache
 import java.util.*
 
 object AccountService {
-	fun getAccounts(): List<PlayerAccountDto> = getEconomyStateOrThrow { state ->
+	fun getAccounts(): List<PlayerAccountDto> {
+		throwIfEconomyStateNull()
 		val userCache = getUserCache()
-		state.getAccounts().asSequence()
+		return EconomyService.getAccounts().asSequence()
 			.map { it.toDto(userCache.getUsername(it.uuid)) }
 			.toList()
 	}
 
-	fun getAccount(uuid: UUID): PlayerAccountDto = getEconomyStateOrThrow { state ->
-		val userCache = getUserCache()
-		state.getAccount(uuid).toDto(userCache.getUsername(uuid))
+	fun getAccount(uuid: UUID): PlayerAccountDto {
+		throwIfEconomyStateNull()
+		return EconomyService.getAccount(uuid).toDto(getUserCache().getUsername(uuid))
 	}
 
 	fun setBalance(uuid: UUID, money: Long, loginUsername: String) {

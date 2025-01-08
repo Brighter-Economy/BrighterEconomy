@@ -1,5 +1,6 @@
 package brightspark.brightereconomy
 
+import brightspark.brightereconomy.persistance.StorageType
 import io.wispforest.owo.config.annotation.*
 
 @Suppress("unused")
@@ -22,6 +23,11 @@ class ModConfigModel {
 	@JvmField
 	@ExcludeFromScreen
 	var loginPassword: String = "admin"
+
+	@JvmField
+	@ExcludeFromScreen
+	@RestartRequired
+	var storageType: StorageType = StorageType.WORLD_NBT
 
 	@JvmField
 	@RestartRequired

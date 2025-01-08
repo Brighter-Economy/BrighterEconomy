@@ -1,6 +1,7 @@
 package brightspark.brightereconomy.economy
 
 import brightspark.brightereconomy.BrighterEconomy
+import brightspark.brightereconomy.persistance.EconomyStorage
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtElement
 import net.minecraft.nbt.NbtList
@@ -9,11 +10,9 @@ import net.minecraft.world.PersistentState
 import net.minecraft.world.World
 import java.util.*
 
-class EconomyState : PersistentState {
+class EconomyState : PersistentState, EconomyStorage {
 	companion object {
-		fun getOptional(): Optional<EconomyState> = BrighterEconomy.SERVER.map { get(it) }
-
-		fun get(): EconomyState = getOptional().orElseThrow()
+		fun get(): EconomyState = BrighterEconomy.SERVER.map { get(it) }.orElseThrow()
 
 		fun get(server: MinecraftServer): EconomyState {
 			val manager = server.getWorld(World.OVERWORLD)!!.persistentStateManager
@@ -33,44 +32,17 @@ class EconomyState : PersistentState {
 		readNbt(nbt)
 	}
 
-	fun getAccounts(): Collection<PlayerAccount> = accounts.values
+	override fun getAccounts(): Collection<PlayerAccount> = accounts.values
 
-	fun getAccount(uuid: UUID): PlayerAccount = accounts.getOrElse(uuid) { PlayerAccount(uuid = uuid) }
+	override fun getAccount(uuid: UUID): PlayerAccount = accounts.getOrElse(uuid) { PlayerAccount(uuid = uuid) }
 
-	fun setMoney(uuid: UUID, money: Long, initiatorName: String? = null) {
-		accounts.compute(uuid) { _, account ->
-			account?.copy(money = money) ?: PlayerAccount(uuid = uuid, money = money)
-		}.also {
-			onPlayerAccountUpdated(it!!)
-		}
+	override fun updateAccount(uuid: UUID, accountConsumer: (PlayerAccount?) -> PlayerAccount): PlayerAccount =
+		accounts.compute(uuid) { _, account -> accountConsumer(account) }!!
 
-		initiatorName?.let {
-			BrighterEconomy.LOG.atInfo()
-				.setMessage("Money set success {} to {} initiated by {}")
-				.addArgument(uuid).addArgument(money).addArgument(initiatorName)
-				.log()
-		}
-	}
+	override fun getTransactions(): Sequence<Transaction> = transactions.asSequence()
 
-	fun getTransactions(): Sequence<Transaction> = transactions.asSequence()
-
-	fun addTransaction(transaction: Transaction) {
+	override fun addTransaction(transaction: Transaction) {
 		transactions += transaction
-	}
-
-	fun setAccountLock(uuid: UUID, locked: Boolean) {
-		accounts.compute(uuid) { _, account ->
-			account?.copy(locked = locked) ?: PlayerAccount(uuid = uuid, locked = locked)
-		}.also {
-			onPlayerAccountUpdated(it!!)
-		}
-	}
-
-	private fun onPlayerAccountUpdated(account: PlayerAccount) = BrighterEconomy.SERVER.ifPresent { server ->
-		server.playerManager.playerList.asSequence()
-			.map { it.currentScreenHandler }
-			.filter { it is PlayerAccountListener }
-			.forEach { (it as PlayerAccountListener).handlePlayerAccountUpdate(account) }
 	}
 
 	private fun readNbt(nbt: NbtCompound) {

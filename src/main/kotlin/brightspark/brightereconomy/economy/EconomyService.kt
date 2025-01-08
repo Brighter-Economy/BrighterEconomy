@@ -2,17 +2,23 @@ package brightspark.brightereconomy.economy
 
 import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.economy.TransactionExchangeResult.*
+import brightspark.brightereconomy.persistance.EconomyStorage
 import net.minecraft.item.ItemStack
 import java.util.*
 
 object EconomyService {
-	fun getAccount(uuid: UUID): PlayerAccount = EconomyState.get().getAccount(uuid)
+	val storage: EconomyStorage
+		get() = EconomyStorage.getStorage()
+
+	fun getAccounts(): Collection<PlayerAccount> = storage.getAccounts()
+
+	fun getAccount(uuid: UUID): PlayerAccount = storage.getAccount(uuid)
 
 	fun simulateExchange(uuidFrom: UUID?, uuidTo: UUID?, money: Long): TransactionExchangeResult {
 		if (uuidFrom == null && uuidTo == null)
 			throw IllegalArgumentException("Can't exchange money between two null account UUIDs!")
 
-		val state = EconomyState.get()
+		val state = storage
 		val from = uuidFrom?.let { state.getAccount(it) }
 		val to = uuidTo?.let { state.getAccount(it) }
 		return validateExchange(from, to, money)
@@ -32,9 +38,8 @@ object EconomyService {
 			.addArgument(money).addArgument(uuidFrom).addArgument(uuidTo).addArgument(initiatorName)
 			.log()
 
-		val state = EconomyState.get()
-		val from = uuidFrom?.let { state.getAccount(it) }
-		val to = uuidTo?.let { state.getAccount(it) }
+		val from = uuidFrom?.let { getAccount(it) }
+		val to = uuidTo?.let { getAccount(it) }
 		val result = validateExchange(from, to, money)
 		if (result != SUCCESS) {
 			BrighterEconomy.LOG.atInfo()
@@ -45,8 +50,8 @@ object EconomyService {
 			return result
 		}
 
-		from?.let { state.setMoney(it.uuid, it.money - money) }
-		to?.let { state.setMoney(it.uuid, it.money + money) }
+		from?.let { setMoney(it.uuid, it.money - money, initiatorName) }
+		to?.let { setMoney(it.uuid, it.money + money, initiatorName) }
 
 		BrighterEconomy.LOG.atInfo()
 			.setMessage("Exchange success {} from {} to {} initiated by {}")
@@ -56,7 +61,12 @@ object EconomyService {
 		return SUCCESS
 	}
 
-	fun transfer(uuidFrom: UUID?, uuidTo: UUID?, money: Long, initiatorName: String): TransactionExchangeResult =
+	fun transfer(
+		uuidFrom: UUID?,
+		uuidTo: UUID?,
+		money: Long,
+		initiatorName: String
+	): TransactionExchangeResult =
 		exchange(uuidFrom, uuidTo, money, initiatorName).also {
 			if (it == SUCCESS) transactionTransfer(uuidFrom, uuidTo, money)
 		}
@@ -81,22 +91,22 @@ object EconomyService {
 	}
 
 	fun set(uuid: UUID, money: Long, initiatorName: String) {
-		val state = EconomyState.get()
-		val moneyBefore = state.getAccount(uuid).money
-		state.setMoney(uuid, money, initiatorName)
-		val diff = state.getAccount(uuid).money - moneyBefore
+		val diff = money - getAccount(uuid).money
+		setMoney(uuid, money, initiatorName)
 		transactionModify(uuid, diff)
 	}
 
 	fun lockAccount(uuid: UUID) {
-		EconomyState.get().setAccountLock(uuid, true)
+		setAccountLock(uuid, true)
 		BrighterEconomy.LOG.atInfo().setMessage("Locked account {}").addArgument(uuid).log()
 	}
 
 	fun unlockAccount(uuid: UUID) {
-		EconomyState.get().setAccountLock(uuid, false)
+		setAccountLock(uuid, false)
 		BrighterEconomy.LOG.atInfo().setMessage("Unlocked account {}").addArgument(uuid).log()
 	}
+
+	fun getTransactions(): Sequence<Transaction> = storage.getTransactions()
 
 	private fun validateExchange(from: PlayerAccount?, to: PlayerAccount?, money: Long): TransactionExchangeResult {
 		from?.takeIf { it.locked }?.let {
@@ -126,17 +136,39 @@ object EconomyService {
 	}
 
 	private fun transactionTransfer(uuidFrom: UUID?, uuidTo: UUID?, money: Long) {
-		EconomyState.get().addTransaction(Transaction.transfer(uuidFrom, uuidTo, money))
+		storage.addTransaction(Transaction.transfer(uuidFrom, uuidTo, money))
 	}
 
 	private fun transactionPurchase(uuidFrom: UUID?, uuidTo: UUID, money: Long, stack: ItemStack) {
-		EconomyState.get().addTransaction(Transaction.purchase(uuidFrom, uuidTo, money, stack))
+		storage.addTransaction(Transaction.purchase(uuidFrom, uuidTo, money, stack))
 	}
 
 	private fun transactionModify(uuid: UUID, money: Long) {
 		if (money == 0.toLong()) return
 		val from = if (money < 0) uuid else null
 		val to = if (money > 0) uuid else null
-		EconomyState.get().addTransaction(Transaction.modify(from, to, money))
+		storage.addTransaction(Transaction.modify(from, to, money))
+	}
+
+	private fun setMoney(uuid: UUID, money: Long, initiatorName: String?) {
+		val state = storage
+		val account = state.updateAccount(uuid) {
+			it?.copy(money = money) ?: PlayerAccount(uuid = uuid, money = money)
+		}
+		EconomyStorage.onPlayerAccountUpdated(account)
+		initiatorName?.let {
+			BrighterEconomy.LOG.atInfo()
+				.setMessage("Money set success {} to {} initiated by {}")
+				.addArgument(uuid).addArgument(money).addArgument(initiatorName)
+				.log()
+		}
+	}
+
+	private fun setAccountLock(uuid: UUID, locked: Boolean) {
+		val state = storage
+		val account = state.updateAccount(uuid) {
+			it?.copy(locked = locked) ?: PlayerAccount(uuid = uuid, locked = locked)
+		}
+		EconomyStorage.onPlayerAccountUpdated(account)
 	}
 }
