@@ -19,7 +19,7 @@ class ShopOwnerScreenHandler(
 ) : ShopScreenHandler(BrighterEconomy.SHOP_OWNER_SCREEN_HANDLER, syncId, playerInventory, shopBlockEntity, 8, 71) {
 
 	private val shopSlotId: Int
-	var cost: SyncedProperty<Int> = property(shopBlockEntity, ShopBlockEntity::cost, 0)
+	var cost: SyncedProperty<Int> = property(shopBlockEntity, ShopBlockEntity::cost, ShopBlockEntity::setCost, 0)
 
 	init {
 		addServerboundMessage(SetShopDataPacket::class.java) {

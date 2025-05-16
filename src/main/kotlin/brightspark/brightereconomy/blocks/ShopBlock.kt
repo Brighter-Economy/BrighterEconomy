@@ -1,6 +1,7 @@
 package brightspark.brightereconomy.blocks
 
 import brightspark.brightereconomy.BrighterEconomy
+import brightspark.brightereconomy.shops.ShopTrackerService
 import brightspark.brightereconomy.util.sendLiteralOverlayMessage
 import net.minecraft.block.Block
 import net.minecraft.block.BlockRenderType
@@ -31,6 +32,46 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 		type: BlockEntityType<T>?
 	): BlockEntityTicker<T>? =
 		checkType(type, BrighterEconomy.SHOP_BLOCK_ENTITY) { w, p, s, be -> be.tick(w, p, s) }
+
+	override fun onBlockAdded(
+		state: BlockState,
+		world: World,
+		pos: BlockPos,
+		oldState: BlockState,
+		notify: Boolean
+	) {
+		world.getBlockEntity(pos, BrighterEconomy.SHOP_BLOCK_ENTITY).ifPresentOrElse(
+			{ ShopTrackerService.addShop(it) },
+			{
+				BrighterEconomy.LOG.atError()
+					.setMessage("Can't get shop block entity when added at {} {}")
+					.addArgument(world.dimensionKey.value).addArgument(pos)
+					.log()
+			}
+		)
+		super.onBlockAdded(state, world, pos, oldState, notify)
+	}
+
+	override fun onStateReplaced(
+		state: BlockState,
+		world: World,
+		pos: BlockPos,
+		newState: BlockState,
+		moved: Boolean
+	) {
+		if (!state.isOf(newState.block)) {
+			world.getBlockEntity(pos, BrighterEconomy.SHOP_BLOCK_ENTITY).ifPresentOrElse(
+				{ ShopTrackerService.removeShop(it) },
+				{
+					BrighterEconomy.LOG.atError()
+						.setMessage("Can't get shop block entity when removed at {} {}")
+						.addArgument(world.dimensionKey.value).addArgument(pos)
+						.log()
+				}
+			)
+		}
+		super.onStateReplaced(state, world, pos, newState, moved)
+	}
 
 	override fun onUse(
 		state: BlockState,

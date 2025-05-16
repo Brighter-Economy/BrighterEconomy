@@ -3,6 +3,7 @@ package brightspark.brightereconomy.blocks
 import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.screen.ShopCustomerScreenHandler
 import brightspark.brightereconomy.screen.ShopOwnerScreenHandler
+import brightspark.brightereconomy.shops.ShopTrackerService
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
@@ -22,8 +23,11 @@ import java.util.*
 class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEconomy.SHOP_BLOCK_ENTITY, pos, state),
 	NamedScreenHandlerFactory, SingleStackInventory {
 
+	var shopId: UUID = UUID.randomUUID()
+		private set
 	var owner: UUID = Util.NIL_UUID
 	var cost: Int = 0
+		private set
 	private var itemStackForSale: ItemStack = ItemStack.EMPTY
 
 	var linkedContainer: BlockPos = BlockPos.ORIGIN
@@ -90,6 +94,11 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 		return stacks
 	}
 
+	fun setCost(cost: Int) {
+		this.cost = cost
+		ShopTrackerService.updateShop(shopId) { it.copy(price = cost) }
+	}
+
 	override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): ScreenHandler =
 		if (player.uuid == owner)
 			ShopOwnerScreenHandler(syncId, playerInventory, this)
@@ -111,14 +120,16 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 		}
 
 	override fun setStack(slot: Int, stack: ItemStack) {
-		if (slot == 0)
-			itemStackForSale = stack
+		if (slot != 0) return
+		itemStackForSale = stack
+		ShopTrackerService.updateShop(shopId) { it.copy(itemStack = stack) }
 	}
 
 	override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
 
 	override fun readNbt(nbt: NbtCompound) {
 		super.readNbt(nbt)
+		shopId = nbt.getUuid("shopId")
 		owner = nbt.getUuid("owner")
 		cost = nbt.getInt("cost")
 		itemStackForSale = ItemStack.fromNbt(nbt.getCompound("stackForSale"))
@@ -127,6 +138,7 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 
 	override fun writeNbt(nbt: NbtCompound) {
 		super.writeNbt(nbt)
+		nbt.putUuid("shopId", shopId)
 		nbt.putUuid("owner", owner)
 		nbt.putInt("cost", cost)
 		nbt.put("stackForSale", itemStackForSale.writeNbt(NbtCompound()))

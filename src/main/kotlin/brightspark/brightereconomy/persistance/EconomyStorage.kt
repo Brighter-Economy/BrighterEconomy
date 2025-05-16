@@ -9,7 +9,7 @@ import java.util.*
 
 interface EconomyStorage {
 	companion object : BaseStorageProvider<EconomyStorage>() {
-		override fun createPersistentState(): EconomyStorage = EconomyState.get()
+		override fun getPersistentState(): EconomyStorage = EconomyState.get()
 
 		fun onPlayerAccountUpdated(account: PlayerAccount) = BrighterEconomy.SERVER.ifPresent { server ->
 			server.playerManager.playerList.asSequence()
@@ -23,7 +23,7 @@ interface EconomyStorage {
 
 	fun getAccount(uuid: UUID): PlayerAccount
 
-	fun updateAccount(uuid: UUID, accountConsumer: (PlayerAccount?) -> PlayerAccount): PlayerAccount
+	fun updateAccount(uuid: UUID, accountUpdater: (PlayerAccount?) -> PlayerAccount): PlayerAccount
 
 	fun getTransactions(): Sequence<Transaction>
 

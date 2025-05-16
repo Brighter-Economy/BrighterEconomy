@@ -4,15 +4,10 @@ import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.persistance.StorageType.WORLD_NBT
 
 abstract class BaseStorageProvider<T> : StorageProvider<T> {
-	private var storage: T? = null
-
-	override fun getStorage(): T = storage ?: run {
-		storage = when (val type = BrighterEconomy.CONFIG.storageType()) {
-			WORLD_NBT -> createPersistentState()
-			else -> error("No EconomyStorage for type $type")
-		}
-		storage!!
+	override fun getStorage(): T = when (val type = BrighterEconomy.CONFIG.storageType()) {
+		WORLD_NBT -> getPersistentState()
+		else -> error("No EconomyStorage for type $type")
 	}
 
-	abstract fun createPersistentState(): T
+	abstract fun getPersistentState(): T
 }

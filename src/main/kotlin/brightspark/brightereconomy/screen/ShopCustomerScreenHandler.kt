@@ -29,7 +29,7 @@ class ShopCustomerScreenHandler(
 	var forSaleStack: SyncedProperty<ItemStack> =
 		property(shopBlockEntity, ShopBlockEntity::getStack, ShopBlockEntity::setStack, ItemStack.EMPTY)
 		private set
-	var cost: SyncedProperty<Int> = property(shopBlockEntity, ShopBlockEntity::cost, 0)
+	var cost: SyncedProperty<Int> = property(shopBlockEntity, ShopBlockEntity::cost, ShopBlockEntity::setCost, 0)
 		private set
 	var stock: SyncedProperty<Int> = property(shopBlockEntity, ShopBlockEntity::getStockAmount, { _, _ -> }, 0)
 		private set

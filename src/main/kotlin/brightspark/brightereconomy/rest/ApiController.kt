@@ -1,10 +1,7 @@
 package brightspark.brightereconomy.rest
 
 import brightspark.brightereconomy.rest.dto.Sort
-import brightspark.brightereconomy.rest.service.AccountService
-import brightspark.brightereconomy.rest.service.ConfigService
-import brightspark.brightereconomy.rest.service.ItemService
-import brightspark.brightereconomy.rest.service.TransactionService
+import brightspark.brightereconomy.rest.service.*
 import io.ktor.http.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
@@ -64,6 +61,12 @@ object ApiController {
 			val limit: Int = call.queryParameters.getOptional("limit", 10)
 			val sort: Sort = call.queryParameters.getOptional("sort", Sort.DESC)
 			call.respond(TransactionService.getTransactions(limit, sort))
+		}
+
+		route("/shops") {
+			get {
+				call.respond(ShopService.getShops())
+			}
 		}
 
 		route("/items") {

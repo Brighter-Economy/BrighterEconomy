@@ -10,9 +10,8 @@ object AccountService {
 	fun getAccounts(): List<PlayerAccountDto> {
 		throwIfEconomyStateNull()
 		val userCache = getUserCache()
-		return EconomyService.getAccounts().asSequence()
+		return EconomyService.getAccounts()
 			.map { it.toDto(userCache.getUsername(it.uuid)) }
-			.toList()
 	}
 
 	fun getAccount(uuid: UUID): PlayerAccountDto {

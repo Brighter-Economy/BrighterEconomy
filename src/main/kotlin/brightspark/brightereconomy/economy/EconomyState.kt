@@ -25,8 +25,8 @@ class EconomyState : PersistentState, EconomyStorage {
 
 	override fun getAccount(uuid: UUID): PlayerAccount = accounts.getOrElse(uuid) { PlayerAccount(uuid = uuid) }
 
-	override fun updateAccount(uuid: UUID, accountConsumer: (PlayerAccount?) -> PlayerAccount): PlayerAccount =
-		accounts.compute(uuid) { _, account -> accountConsumer(account) }!!.also { markDirty() }
+	override fun updateAccount(uuid: UUID, accountUpdater: (PlayerAccount?) -> PlayerAccount): PlayerAccount =
+		accounts.compute(uuid) { _, account -> accountUpdater(account) }!!.also { markDirty() }
 
 	override fun getTransactions(): Sequence<Transaction> = transactions.asSequence()
 
