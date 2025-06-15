@@ -26,11 +26,13 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 	var shopId: UUID = UUID.randomUUID()
 		private set
 	var owner: UUID = Util.NIL_UUID
+		private set
 	var cost: Int = 0
 		private set
 	private var itemStackForSale: ItemStack = ItemStack.EMPTY
 
 	var linkedContainer: BlockPos = BlockPos.ORIGIN
+		private set
 	private val linkedInventory: Inventory?
 		get() = if (linkedContainer != BlockPos.ORIGIN) world!!.getBlockEntity(linkedContainer) as Inventory else null
 
@@ -49,7 +51,7 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 		listeners.forEach(function)
 	}
 
-	fun tick(world: World, pos: BlockPos, state: BlockState) {
+	fun tick(world: World) {
 		if ((world.time + 6).mod(20) != 0 || listeners.isEmpty()) return
 
 		// Check if there's been any changes to the linked container's inventory
@@ -63,6 +65,11 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 				notifyListeners { it.stock.set(stock) }
 			}
 		}
+	}
+
+	fun setOwner(ownerUuid: UUID) {
+		owner = ownerUuid
+		markDirty()
 	}
 
 	fun getStockAmount(): Int = linkedInventory?.count(itemStackForSale.item) ?: 0
@@ -97,6 +104,12 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 	fun setCost(cost: Int) {
 		this.cost = cost
 		ShopTrackerService.updateShop(shopId) { it.copy(price = cost) }
+		markDirty()
+	}
+
+	fun setLinkedContainer(pos: BlockPos) {
+		linkedContainer = pos
+		markDirty()
 	}
 
 	override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): ScreenHandler =
@@ -114,6 +127,7 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 			itemStackForSale.decrement(amount)
 			if (itemStackForSale.isEmpty)
 				itemStackForSale = ItemStack.EMPTY
+			markDirty()
 			itemStackForSale
 		} else {
 			ItemStack.EMPTY
@@ -123,6 +137,7 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 		if (slot != 0) return
 		itemStackForSale = stack
 		ShopTrackerService.updateShop(shopId) { it.copy(itemStack = stack) }
+		markDirty()
 	}
 
 	override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)

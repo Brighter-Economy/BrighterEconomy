@@ -31,7 +31,7 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 		state: BlockState?,
 		type: BlockEntityType<T>?
 	): BlockEntityTicker<T>? =
-		checkType(type, BrighterEconomy.SHOP_BLOCK_ENTITY) { w, p, s, be -> be.tick(w, p, s) }
+		checkType(type, BrighterEconomy.SHOP_BLOCK_ENTITY) { w, p, s, be -> be.tick(w) }
 
 	override fun onBlockAdded(
 		state: BlockState,

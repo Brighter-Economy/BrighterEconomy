@@ -76,8 +76,8 @@ class ShopBlockItem(block: Block, settings: Settings) : BlockItem(block, setting
 			?.takeIf { it is ShopBlockEntity }
 			?.let { it as ShopBlockEntity }
 			?.let { be ->
-				player?.uuid?.let { be.owner = it }
-				stack.nbt?.getLong(NBT_CONTAINER)?.let { be.linkedContainer = BlockPos.fromLong(it) }
+				player?.uuid?.let { be.setOwner(it) }
+				stack.nbt?.getLong(NBT_CONTAINER)?.let { be.setLinkedContainer(BlockPos.fromLong(it)) }
 			}
 
 		return result
