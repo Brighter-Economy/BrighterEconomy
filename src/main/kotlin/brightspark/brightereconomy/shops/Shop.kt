@@ -48,7 +48,7 @@ data class Shop(
 		ownerName = Util.getUsername(owner),
 		dimension = dimension,
 		position = position.toDto(),
-		item = itemStack.toDto(),
+		itemStack = itemStack.toDto(),
 		price = price
 	)
 }
