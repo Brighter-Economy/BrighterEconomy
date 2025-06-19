@@ -42,7 +42,7 @@ jobs:
           workflow: build.yml
           search_artifacts: true
           name: dist
-          path: src/resources/web/
+          path: src/main/resources/web/
       - name: build
         run: ./gradlew build
       - name: capture build artifacts
