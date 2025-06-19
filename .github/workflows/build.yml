@@ -39,6 +39,7 @@ jobs:
           repo: Brighter-Economy/BE-Webapp
           branch: main
           event: push
+          workflow: build.yml
           search_artifacts: true
           name: dist
           path: src/resources/web/
