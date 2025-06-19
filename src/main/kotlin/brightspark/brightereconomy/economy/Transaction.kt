@@ -1,6 +1,7 @@
 package brightspark.brightereconomy.economy
 
 import brightspark.brightereconomy.rest.dto.TransactionDto
+import brightspark.brightereconomy.util.toDto
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import java.util.*
@@ -79,7 +80,7 @@ data class Transaction(
 		nameFrom = nameFrom,
 		nameTo = nameTo,
 		money = money,
-		itemPurchased = itemPurchased,
+		itemPurchased = itemPurchased?.toDto(),
 		timestamp = timestamp
 	)
 }

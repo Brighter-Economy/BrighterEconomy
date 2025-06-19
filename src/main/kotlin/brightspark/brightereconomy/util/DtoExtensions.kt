@@ -15,10 +15,10 @@ fun BlockPos.toDto(): PositionDto =
 fun Enchantment.toDto(level: Int): EnchantmentDto =
 	EnchantmentDto(Registries.ENCHANTMENT.getId(this).toString(), level)
 
-fun ItemStack.toDto(): ItemStackDto =
-	ItemStackDto(
-		Registries.ITEM.getId(this.item).toString(),
-		this.count,
-		EnchantmentHelper.get(this).map { it.key.toDto(it.value) },
-		this.nbt?.getString(ItemStack.LORE_KEY)
-	)
+fun ItemStack.toDto(): ItemStackDto = ItemStackDto(
+	item = Registries.ITEM.getId(this.item).toString(),
+	count = this.count,
+	customName = if (this.hasCustomName()) this.name.string else null,
+	enchantments = EnchantmentHelper.get(this).map { it.key.toDto(it.value) },
+	lore = this.nbt?.getString(ItemStack.LORE_KEY)
+)
