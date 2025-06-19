@@ -31,11 +31,22 @@ jobs:
       - name: make gradle wrapper executable
         if: ${{ runner.os != 'Windows' }}
         run: chmod +x ./gradlew
+      - name: download webapp
+        if: ${{ runner.os == 'Linux' && matrix.java == '21' }}
+        uses: dawidd6/action-download-artifact@v11
+        with:
+          github_token: ${{ secrets.DOWNLOAD_ACTION_TOKEN }}
+          repo: Brighter-Economy/BE-Webapp
+          branch: main
+          event: push
+          search_artifacts: true
+          name: dist
+          path: src/resources/web/
       - name: build
         run: ./gradlew build
       - name: capture build artifacts
         if: ${{ runner.os == 'Linux' && matrix.java == '21' }} # Only upload artifacts built from latest java on one OS
         uses: actions/upload-artifact@v4
         with:
-          name: Artifacts
+          name: jar
           path: build/libs/
