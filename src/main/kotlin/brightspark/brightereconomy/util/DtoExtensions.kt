@@ -12,8 +12,10 @@ import net.minecraft.util.math.BlockPos
 fun BlockPos.toDto(): PositionDto =
 	PositionDto(this.x, this.y, this.z)
 
-fun Enchantment.toDto(level: Int): EnchantmentDto =
-	EnchantmentDto(Registries.ENCHANTMENT.getId(this).toString(), level)
+fun Enchantment.toDto(level: Int): EnchantmentDto = EnchantmentDto(
+	id = Registries.ENCHANTMENT.getId(this).toString(),
+	level = if (this.minLevel == 1 && this.maxLevel == 1) null else level
+)
 
 fun ItemStack.toDto(): ItemStackDto = ItemStackDto(
 	item = Registries.ITEM.getId(this.item).toString(),
