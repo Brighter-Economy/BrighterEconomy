@@ -10,8 +10,10 @@ import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
+import net.minecraft.item.ItemStack
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.Properties
 import net.minecraft.util.*
@@ -33,23 +35,28 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 	): BlockEntityTicker<T>? =
 		checkType(type, BrighterEconomy.SHOP_BLOCK_ENTITY) { w, p, s, be -> be.tick(w) }
 
-	override fun onBlockAdded(
-		state: BlockState,
+	override fun onPlaced(
 		world: World,
 		pos: BlockPos,
-		oldState: BlockState,
-		notify: Boolean
+		state: BlockState,
+		placer: LivingEntity?,
+		itemStack: ItemStack
 	) {
-		world.getBlockEntity(pos, BrighterEconomy.SHOP_BLOCK_ENTITY).ifPresentOrElse(
-			{ ShopTrackerService.addShop(it) },
-			{
-				BrighterEconomy.LOG.atError()
-					.setMessage("Can't get shop block entity when added at {} {}")
-					.addArgument(world.dimensionKey.value).addArgument(pos)
-					.log()
-			}
-		)
-		super.onBlockAdded(state, world, pos, oldState, notify)
+		if (!world.isClient) {
+			world.getBlockEntity(pos, BrighterEconomy.SHOP_BLOCK_ENTITY).ifPresentOrElse(
+				{ be ->
+					placer?.uuid?.let { be.setOwner(it) }
+					ShopTrackerService.addShop(be)
+				},
+				{
+					BrighterEconomy.LOG.atError()
+						.setMessage("Can't get shop block entity when added at {} {}")
+						.addArgument(world.dimensionKey.value).addArgument(pos)
+						.log()
+				}
+			)
+		}
+		super.onPlaced(world, pos, state, placer, itemStack)
 	}
 
 	override fun onStateReplaced(

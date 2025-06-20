@@ -1,7 +1,7 @@
 package brightspark.brightereconomy.items
 
+import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.blocks.ShopBlock
-import brightspark.brightereconomy.blocks.ShopBlockEntity
 import brightspark.brightereconomy.util.sendLiteralOverlayMessage
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -72,13 +72,9 @@ class ShopBlockItem(block: Block, settings: Settings) : BlockItem(block, setting
 	): Boolean {
 		val result = super.postPlacement(pos, world, player, stack, state)
 
-		world.getBlockEntity(pos)
-			?.takeIf { it is ShopBlockEntity }
-			?.let { it as ShopBlockEntity }
-			?.let { be ->
-				player?.uuid?.let { be.setOwner(it) }
-				stack.nbt?.getLong(NBT_CONTAINER)?.let { be.setLinkedContainer(BlockPos.fromLong(it)) }
-			}
+		world.getBlockEntity(pos, BrighterEconomy.SHOP_BLOCK_ENTITY).ifPresent { be ->
+			stack.nbt?.getLong(NBT_CONTAINER)?.let { be.setLinkedContainer(BlockPos.fromLong(it)) }
+		}
 
 		return result
 	}
