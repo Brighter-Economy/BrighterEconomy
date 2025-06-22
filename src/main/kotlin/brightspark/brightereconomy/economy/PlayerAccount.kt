@@ -52,5 +52,5 @@ data class PlayerAccount(
 	}
 
 	fun toDto(username: String): PlayerAccountDto =
-		PlayerAccountDto(uuid.toString(), username, locked, money, Util.formatMoney(money))
+		PlayerAccountDto(uuid, username, locked, money, Util.formatMoney(money))
 }

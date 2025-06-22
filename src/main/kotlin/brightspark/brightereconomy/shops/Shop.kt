@@ -43,8 +43,8 @@ data class Shop(
 	}
 
 	fun toDto(): ShopDto = ShopDto(
-		id = id.toString(),
-		ownerUuid = owner.toString(),
+		id = id,
+		ownerUuid = owner,
 		ownerName = Util.getUsername(owner),
 		dimension = dimension,
 		position = position.toDto(),
