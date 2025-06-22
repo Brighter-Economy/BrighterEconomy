@@ -9,7 +9,7 @@ security:
   - BasicAuth: [ ]
 
 paths:
-  /user-info:
+  /api/user-info:
     get:
       description: Gets basic user info if successfully authenticated
       tags: [ user-info ]
@@ -25,7 +25,7 @@ paths:
                   value: admin
                 Failure:
                   value: null
-  /configs:
+  /api/configs:
     get:
       description: Gets all configs
       tags: [ configs ]
@@ -38,7 +38,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Config"
-  /configs/{key}:
+  /api/configs/{key}:
     get:
       description: Gets a config by its key
       tags: [ configs ]
@@ -62,7 +62,7 @@ paths:
       responses:
         "200":
           description: OK
-  /accounts:
+  /api/accounts:
     get:
       description: Gets all accounts
       tags: [ accounts ]
@@ -75,7 +75,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Account"
-  /accounts/{uuid}:
+  /api/accounts/{uuid}:
     get:
       description: Gets an account by player UUID
       tags: [ accounts ]
@@ -93,7 +93,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Account"
-  /accounts/{uuid}/transactions:
+  /api/accounts/{uuid}/transactions:
     get:
       description: Gets all transactions for the account
       tags: [ accounts ]
@@ -127,7 +127,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Transaction"
-  /accounts/{uuid}/balance:
+  /api/accounts/{uuid}/balance:
     put:
       description: Set an account's balance by player UUID
       tags: [ accounts ]
@@ -149,7 +149,7 @@ paths:
       responses:
         "200":
           description: OK
-  /transactions:
+  /api/transactions:
     get:
       description: Gets all transactions
       tags: [ transactions ]
@@ -177,7 +177,20 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Transaction"
-  /items:
+  /api/shops:
+    get:
+      description: Gets all shops
+      tags: [ shops ]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Shop"
+  /api/items:
     get:
       description: Gets all item IDs
       tags: [ items ]
@@ -226,6 +239,31 @@ components:
           format: int64
         moneyFormatted:
           type: string
+    ItemStack:
+      type: object
+      properties:
+        item:
+          type: string
+        count:
+          type: integer
+          format: int32
+        customName:
+          type: string
+          nullable: true
+        enchantments:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              level:
+                type: integer
+                format: int32
+                nullable: true
+        lore:
+          type: string
+          nullable: true
     Transaction:
       type: object
       properties:
@@ -234,6 +272,9 @@ components:
         type:
           type: string
           enum: [ TRANSFER, PURCHASE, MODIFY ]
+        shopId:
+          type: uuid
+          nullable: true
         participants:
           type: string
           enum: [ PLAYERS, TO_NULL, FROM_NULL ]
@@ -252,17 +293,38 @@ components:
         money:
           type: integer
           format: int64
-        itemPurchased:
-          type: object
-          properties:
-            item:
-              type: string
-            count:
-              type: integer
-              format: int32
-            nbt:
-              type: string
-              nullable: true
+        itemStack:
+          $ref: "#/components/schemas/ItemStack"
+          nullable: true
         timestamp:
           type: integer
           format: int64
+    Shop:
+      type: object
+      properties:
+        id:
+          type: uuid
+        ownerUuid:
+          type: uuid
+        ownerName:
+          type: uuid
+          nullable: true
+        dimension:
+          type: string
+        position:
+          type: object
+          properties:
+            x:
+              type: integer
+              format: int32
+            y:
+              type: integer
+              format: int32
+            z:
+              type: integer
+              format: int32
+        itemStack:
+          $ref: "#/components/schemas/ItemStack"
+        price:
+          type: integer
+          format: int32
