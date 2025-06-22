@@ -80,7 +80,7 @@ data class Transaction(
 		nameFrom = nameFrom,
 		nameTo = nameTo,
 		money = money,
-		itemPurchased = itemPurchased?.toDto(),
+		itemStack = itemPurchased?.toDto(),
 		timestamp = timestamp
 	)
 }

@@ -19,6 +19,6 @@ data class TransactionDto(
 	val nameFrom: String?,
 	val nameTo: String?,
 	val money: Long,
-	val itemPurchased: ItemStackDto?,
+	val itemStack: ItemStackDto?,
 	val timestamp: Long
 )
