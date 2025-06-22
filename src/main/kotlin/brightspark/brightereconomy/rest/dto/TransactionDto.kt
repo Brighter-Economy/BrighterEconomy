@@ -13,6 +13,7 @@ import java.util.*
 data class TransactionDto(
 	val id: UUID,
 	val type: TransactionType,
+	val shopId: UUID?,
 	val participants: TransactionParticipants,
 	val uuidFrom: UUID?,
 	val uuidTo: UUID?,

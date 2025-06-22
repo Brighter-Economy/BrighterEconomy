@@ -72,6 +72,7 @@ object EconomyService {
 		}
 
 	fun purchase(
+		shopId: UUID,
 		uuidFrom: UUID?,
 		uuidTo: UUID,
 		money: Long,
@@ -79,7 +80,7 @@ object EconomyService {
 		initiatorName: String
 	): TransactionExchangeResult =
 		exchange(uuidFrom, uuidTo, money, initiatorName).also {
-			if (it == SUCCESS) transactionPurchase(uuidFrom, uuidTo, money, stack)
+			if (it == SUCCESS) transactionPurchase(shopId, uuidFrom, uuidTo, money, stack)
 		}
 
 	fun modify(uuid: UUID, add: Boolean, money: Long, initiatorName: String): TransactionExchangeResult {
@@ -139,8 +140,8 @@ object EconomyService {
 		storage.addTransaction(Transaction.transfer(uuidFrom, uuidTo, money))
 	}
 
-	private fun transactionPurchase(uuidFrom: UUID?, uuidTo: UUID, money: Long, stack: ItemStack) {
-		storage.addTransaction(Transaction.purchase(uuidFrom, uuidTo, money, stack))
+	private fun transactionPurchase(shopId: UUID, uuidFrom: UUID?, uuidTo: UUID, money: Long, stack: ItemStack) {
+		storage.addTransaction(Transaction.purchase(shopId, uuidFrom, uuidTo, money, stack))
 	}
 
 	private fun transactionModify(uuid: UUID, money: Long) {

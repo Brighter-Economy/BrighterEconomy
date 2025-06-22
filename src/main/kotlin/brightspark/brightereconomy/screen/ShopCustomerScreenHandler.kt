@@ -77,7 +77,12 @@ class ShopCustomerScreenHandler(
 		}
 
 		val exchangeResult = EconomyService.purchase(
-			playerUuid, ownerUuid, cost, forSaleStack.get().copyWithCount(itemAmount), player.entityName
+			shopBlockEntity.shopId,
+			playerUuid,
+			ownerUuid,
+			cost,
+			forSaleStack.get().copyWithCount(itemAmount),
+			player.entityName
 		)
 		when (exchangeResult) {
 			TransactionExchangeResult.SUCCESS -> handlePurchaseSuccess(player, itemAmount, cost)
