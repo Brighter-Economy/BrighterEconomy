@@ -63,15 +63,18 @@ object ApiController {
 			call.respond(TransactionService.getTransactions(limit, sort))
 		}
 
-		route("/shops") {
-			get {
-				call.respond(ShopService.getShops())
-			}
+		get("/shops") {
+			call.respond(ShopService.getShops())
 		}
 
 		route("/items") {
 			get {
 				call.respond(ItemService.getAllItemKeys())
+			}
+
+			get("/{id}/name") {
+				val id: String by call.parameters
+				call.respond(ItemService.getItemLocalisedName(id))
 			}
 		}
 	}

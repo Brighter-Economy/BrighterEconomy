@@ -1,9 +1,10 @@
 package brightspark.brightereconomy.screen
 
 import brightspark.brightereconomy.BrighterEconomy
-import brightspark.brightereconomy.network.ItemTexturePacket
+import brightspark.brightereconomy.network.ItemDataPacket
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.resource.language.I18n
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.ScreenshotRecorder
 import net.minecraft.item.Item
@@ -21,44 +22,41 @@ class ItemImageGeneratorScreen : Screen(Text.literal("")) {
 		private const val CHUNKING_SIZE: Int = 50
 	}
 
-	private val itemsLeft = Registries.ITEM.entrySet.mapTo(mutableListOf()) { (key, value) ->
-		key.value.run { "${namespace}_$path" } to value
-	}
+	private val itemsLeft = Registries.ITEM.entrySet.mapTo(mutableListOf()) { (key, value) -> key.value to value }
 	private val totalItems = itemsLeft.size
 	private var doneItems = 0
-	private val itemImages = mutableListOf<Pair<String, NativeImage>>()
+	private val processedItems = mutableListOf<ItemDataPacket.ItemData>()
 
 	override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
 		super.render(context, mouseX, mouseY, delta)
 
 		if (itemsLeft.isEmpty()) {
-			client!!.setScreen(null)
-			client!!.player?.sendMessage(Text.literal("Finished"))
+			close()
 		} else {
-			val item = itemsLeft.removeFirst()
-			val name = item.first
-			val image = createItemImage(context, item.second)
-			itemImages += name to image
+			val itemPair = itemsLeft.removeFirst()
+			val item = itemPair.second
+			val image = createItemImage(context, item)
+			processedItems += ItemDataPacket.ItemData(
+				itemPair.first.toString(),
+				I18n.translate(item.translationKey),
+				image.bytes
+			)
 			doneItems += 1
 			client!!.player?.sendMessage(Text.literal("Working... $doneItems / $totalItems"), true)
 		}
 
-		if (itemImages.size >= CHUNKING_SIZE || itemsLeft.isEmpty()) {
-			BrighterEconomy.NETWORK.clientHandle().send(
-				ItemTexturePacket(
-				itemImages.map { ItemTexturePacket.ItemTexture(it.first, it.second.bytes) }
-			))
-			BrighterEconomy.LOG.info("Sent ${itemImages.size} item images to server")
-			itemImages.clear()
-		}
+		if (processedItems.size >= CHUNKING_SIZE)
+			sendToServer()
 	}
 
 	override fun renderBackground(context: DrawContext) = Unit
 
 	override fun close() {
-		if (itemsLeft.isNotEmpty()) {
+		sendToServer()
+		if (itemsLeft.isNotEmpty())
 			client!!.player?.sendMessage(Text.literal("Cancelled early at $doneItems / $totalItems"))
-		}
+		else
+			client!!.player?.sendMessage(Text.literal("Finished"))
 		super.close()
 	}
 
@@ -91,5 +89,14 @@ class ItemImageGeneratorScreen : Screen(Text.literal("")) {
 				}
 			}
 		}
+	}
+
+	private fun sendToServer() {
+		if (processedItems.isEmpty())
+			return
+
+		BrighterEconomy.NETWORK.clientHandle().send(ItemDataPacket(processedItems.toList()))
+		BrighterEconomy.LOG.info("Sent ${processedItems.size} item images to server")
+		processedItems.clear()
 	}
 }
