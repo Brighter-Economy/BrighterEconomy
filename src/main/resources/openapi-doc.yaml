@@ -203,6 +203,24 @@ paths:
                 type: array
                 items:
                   type: string
+  /api/items/{id}/name:
+    get:
+      description: Gets the English localisation for the item name
+      tags: [ items ]
+      parameters:
+        - in: path
+          name: uuid
+          schema:
+            type: uuid
+          required: true
+          description: Item ID
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
 
 components:
   securitySchemes:
