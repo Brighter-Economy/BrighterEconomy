@@ -64,7 +64,7 @@ object RestController {
 					useResources = true
 					defaultPage = "index.html"
 				}
-//				staticResources("/", "web")
+				staticFiles("/resources", BrighterEconomy.SERVER_RESOURCES_DIR_FILE)
 
 				if (FabricLoader.getInstance().isDevelopmentEnvironment) {
 					SwaggerSupport.swaggerRoutes(this)

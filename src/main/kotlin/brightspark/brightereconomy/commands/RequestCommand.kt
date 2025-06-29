@@ -16,7 +16,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
 object RequestCommand : Command("request", {
-	requiresPermission("request", 0)
+	requiresPermission("request", PermissionLevel.ALL)
 
 	thenArgument("player", playerProfileArg()) {
 		thenArgument("amount", longArg(0)) {

@@ -1,4 +1,4 @@
-package brightspark.brightereconomy.network;
+package brightspark.brightereconomy.network.screen;
 
 import brightspark.brightereconomy.economy.PlayerAccount;
 import net.minecraft.item.ItemStack;

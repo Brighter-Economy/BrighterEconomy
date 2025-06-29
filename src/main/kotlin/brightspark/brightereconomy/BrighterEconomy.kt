@@ -7,9 +7,12 @@ import brightspark.brightereconomy.commands.argtype.PlayerAccountArgumentType
 import brightspark.brightereconomy.commands.argtype.PlayerProfileArgumentType
 import brightspark.brightereconomy.economy.PlayerAccount
 import brightspark.brightereconomy.items.ShopBlockItem
+import brightspark.brightereconomy.network.ItemTexturePacket
+import brightspark.brightereconomy.network.ServerPacket
 import brightspark.brightereconomy.rest.RestController
 import brightspark.brightereconomy.screen.ShopCustomerScreenHandler
 import brightspark.brightereconomy.screen.ShopOwnerScreenHandler
+import io.wispforest.owo.network.OwoNetChannel
 import io.wispforest.owo.network.serialization.PacketBufSerializer
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry
@@ -17,6 +20,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
 import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
+import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
@@ -37,14 +41,18 @@ import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.File
+import java.nio.file.Path
 import java.util.*
 
 object BrighterEconomy : ModInitializer {
 	const val MOD_ID = "brightereconomy"
 	val LOG: Logger = LoggerFactory.getLogger(MOD_ID)
 	val CONFIG: ModConfig = ModConfig.createAndLoad()
-//	val NETWORK = OwoNetChannel.create(id("main"))
+	val NETWORK: OwoNetChannel = OwoNetChannel.create(id("main"))
 
+	val SERVER_RESOURCES_DIR_PATH: Path = FabricLoader.getInstance().gameDir.resolve("$MOD_ID-resources")
+	val SERVER_RESOURCES_DIR_FILE: File = SERVER_RESOURCES_DIR_PATH.toFile()
 	var SERVER: Optional<MinecraftServer> = Optional.empty()
 		private set
 
@@ -55,6 +63,8 @@ object BrighterEconomy : ModInitializer {
 	lateinit var SHOP_CUSTOMER_SCREEN_HANDLER: ScreenHandlerType<ShopCustomerScreenHandler>
 
 	override fun onInitialize() {
+		SERVER_RESOURCES_DIR_FILE.mkdirs()
+
 		// Events
 		ServerLifecycleEvents.SERVER_STARTING.register { SERVER = Optional.of(it) }
 		ServerLifecycleEvents.SERVER_STARTED.register { RestController.init() }
@@ -111,8 +121,12 @@ object BrighterEconomy : ModInitializer {
 		SHOP_CUSTOMER_SCREEN_HANDLER = regScreenHandler("shop_customer", ::ShopCustomerScreenHandler)
 
 		// Network
-//		NETWORK.registerServerbound(SetShopDataPacket::class.java, SetShopDataPacket::handle)
+		regServerPacket<ItemTexturePacket>()
 		PacketBufSerializer.register(PlayerAccount::class.java, PlayerAccount.SERIALIZER)
+	}
+
+	inline fun <reified T> regServerPacket() where T : Record, T : ServerPacket {
+		NETWORK.registerServerbound<T>(T::class.java) { message, access -> message.handle(access) }
 	}
 
 	private fun id(name: String): Identifier = Identifier.of(MOD_ID, name)!!
@@ -120,6 +134,7 @@ object BrighterEconomy : ModInitializer {
 	private fun <T : Block> regBlock(name: String, block: T): T =
 		Registry.register(Registries.BLOCK, id(name), block)
 
+	@Suppress("SameParameterValue")
 	private fun <T : BlockEntity> regBlockEntity(
 		name: String,
 		factory: FabricBlockEntityTypeBuilder.Factory<T>,

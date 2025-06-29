@@ -8,7 +8,7 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 
 object UnlockCommand : Command("unlock", {
-	requiresPermission("unlock", 2)
+	requiresPermission("unlock", PermissionLevel.OP)
 
 	thenArgument("player", playerProfileArg()) {
 		executes { ctx -> UnlockCommand.unlockAccount(ctx) }

@@ -14,7 +14,7 @@ import net.minecraft.server.command.ServerCommandSource
 import java.util.*
 
 abstract class Command(
-	private val name: String,
+	name: String,
 	builderBlock: LiteralArgumentBuilder<ServerCommandSource>.() -> Unit
 ) {
 	companion object {
@@ -55,11 +55,13 @@ abstract class Command(
 			command.aliases.forEach { this.then(buildRedirect(it, node)) }
 		}
 
-		fun <T : ArgumentBuilder<ServerCommandSource, T>> T.requiresPermission(level: Int): T =
-			this.requires(Permissions.require(COMMAND_PERM, level))
+		fun <T : ArgumentBuilder<ServerCommandSource, T>> T.requiresPermission(permissionLevel: PermissionLevel): T =
+			this.requires(Permissions.require(COMMAND_PERM, permissionLevel.value))
 
-		fun <T : ArgumentBuilder<ServerCommandSource, T>> T.requiresPermission(permission: String, level: Int): T =
-			this.requires(Permissions.require("$COMMAND_PERM.$permission", level))
+		fun <T : ArgumentBuilder<ServerCommandSource, T>> T.requiresPermission(
+			permission: String,
+			permissionLevel: PermissionLevel
+		): T = this.requires(Permissions.require("$COMMAND_PERM.$permission", permissionLevel.value))
 
 		fun CommandContext<ServerCommandSource>.getPlayer(uuid: UUID): PlayerEntity? =
 			this.source.server.playerManager.getPlayer(uuid)
@@ -73,5 +75,6 @@ abstract class Command(
 		this.aliases.add(alias)
 	}
 
+	@Suppress("SameParameterValue")
 	protected fun aliases(vararg aliases: String): Unit = aliases.forEach { this.aliases.add(it) }
 }

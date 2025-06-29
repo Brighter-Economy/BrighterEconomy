@@ -5,13 +5,14 @@ import com.mojang.brigadier.CommandDispatcher
 import net.minecraft.server.command.ServerCommandSource
 
 object BaseCommand : Command(BrighterEconomy.MOD_ID, {
-	requiresPermission(0)
+	requiresPermission(PermissionLevel.ALL)
 
 	thenCommand(BalanceCommand)
 	thenCommand(LockCommand)
 	thenCommand(UnlockCommand)
 	thenCommand(SendCommand)
 	thenCommand(RequestCommand)
+	thenCommand(SendClientDataCommand)
 }) {
 	init {
 		BrighterEconomy.CONFIG.commandAliases().asSequence()

@@ -2,7 +2,7 @@ package brightspark.brightereconomy.screen
 
 import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.blocks.ShopBlockEntity
-import brightspark.brightereconomy.network.SetShopDataPacket
+import brightspark.brightereconomy.network.screen.SetShopDataPacket
 import brightspark.brightereconomy.util.property
 import io.wispforest.owo.client.screens.SyncedProperty
 import net.minecraft.entity.player.PlayerEntity

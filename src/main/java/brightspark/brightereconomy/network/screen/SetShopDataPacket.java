@@ -1,4 +1,4 @@
-package brightspark.brightereconomy.network;
+package brightspark.brightereconomy.network.screen;
 
 /*
 	Not using a Kotlin data class annotated with @JvmRecord as there's a bug in Kapt for those.

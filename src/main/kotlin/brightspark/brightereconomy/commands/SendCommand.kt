@@ -12,7 +12,7 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 
 object SendCommand : Command("send", {
-	requiresPermission("send", 0)
+	requiresPermission("send", PermissionLevel.ALL)
 
 	thenArgument("player", playerProfileArg()) {
 		thenArgument("amount", longArg(0)) {

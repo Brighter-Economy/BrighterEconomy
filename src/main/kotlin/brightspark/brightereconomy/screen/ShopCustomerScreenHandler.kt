@@ -6,7 +6,7 @@ import brightspark.brightereconomy.economy.EconomyService
 import brightspark.brightereconomy.economy.PlayerAccount
 import brightspark.brightereconomy.economy.PlayerAccountListener
 import brightspark.brightereconomy.economy.TransactionExchangeResult
-import brightspark.brightereconomy.network.CustomerScreenPurchasePacket
+import brightspark.brightereconomy.network.screen.CustomerScreenPurchasePacket
 import brightspark.brightereconomy.util.Util
 import brightspark.brightereconomy.util.getSpaceFor
 import brightspark.brightereconomy.util.property

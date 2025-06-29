@@ -14,12 +14,12 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
 object BalanceCommand : Command("balance", {
-	requiresPermission("balance", 0)
+	requiresPermission("balance", PermissionLevel.ALL)
 
 	executes { ctx -> BalanceCommand.balance(ctx) }
 
 	thenArgument("player", playerAccountArg()) {
-		requiresPermission("player", 2)
+		requiresPermission("player", PermissionLevel.OP)
 
 		executes { ctx ->
 			val playerAccount = PlayerAccountArgumentType.get(ctx, "player")
@@ -50,12 +50,12 @@ object BalanceCommand : Command("balance", {
 	}
 
 	private fun balance(ctx: CommandContext<ServerCommandSource>, player: PlayerProfileAndAccount? = null): Int {
-		val playerId = player?.profile?.id
-		val targetIsSelf = playerId?.equals(ctx.source.player?.id) ?: true
+		val profile = player?.profile
+		val targetIsSelf = profile?.id?.equals(ctx.source.player?.id) ?: true
 		return ctx.source.player?.let { playerEntity ->
 			val account = EconomyService.getAccount(playerEntity.uuid)
 			val money = Util.formatMoney(account.money)
-			val textString = "${if (!targetIsSelf) "${player?.profile?.name}'s " else ""}Balance: $money"
+			val textString = "${if (!targetIsSelf) "${profile.name}'s " else ""}Balance: $money"
 			var text = Text.literal(textString)
 			if (account.locked)
 				text = text.append(Text.literal(" [locked]").styled { it.withColor(Formatting.RED) })

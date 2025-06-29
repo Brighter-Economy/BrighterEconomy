@@ -8,7 +8,7 @@ import net.minecraft.server.command.ServerCommandSource
 import net.minecraft.text.Text
 
 object LockCommand : Command("lock", {
-	requiresPermission("lock", 2)
+	requiresPermission("lock", PermissionLevel.OP)
 
 	thenArgument("player", playerProfileArg()) {
 		executes { ctx -> LockCommand.lockAccount(ctx) }
