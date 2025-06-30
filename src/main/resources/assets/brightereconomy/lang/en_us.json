@@ -9,5 +9,14 @@
 	"brightereconomy.transaction.result.insufficient": "insufficient money",
 	"brightereconomy.transaction.result.overflow": "too much money",
 	"brightereconomy.transaction.result.from_locked": "account source locked",
-	"brightereconomy.transaction.result.to_locked": "account destination locked"
+	"brightereconomy.transaction.result.to_locked": "account destination locked",
+	"text.config.brightereconomy.title": "Brighter Economy Config",
+	"text.config.brightereconomy.section.server_api": "Server API",
+	"text.config.brightereconomy.section.economy": "Economy",
+	"text.config.brightereconomy.section.misc": "Misc",
+	"text.config.brightereconomy.option.apiEnabled": "API Enabled",
+	"text.config.brightereconomy.option.apiPort": "API Port",
+	"text.config.brightereconomy.option.currencySymbol": "Currency Symbol",
+	"text.config.brightereconomy.option.transferTax": "Transfer Tax",
+	"text.config.brightereconomy.option.commandAliases": "Command Aliases"
 }

@@ -7,6 +7,7 @@ import io.wispforest.owo.config.annotation.*
 @Config(name = BrighterEconomy.MOD_ID, wrapperName = "ModConfig")
 @Modmenu(modId = BrighterEconomy.MOD_ID)
 class ModConfigModel {
+	@SectionHeader("server_api")
 	@JvmField
 	@RestartRequired
 	var apiEnabled: Boolean = true
@@ -24,26 +25,21 @@ class ModConfigModel {
 	@ExcludeFromScreen
 	var loginPassword: String = "admin"
 
+	@SectionHeader("economy")
 	@JvmField
-	@ExcludeFromScreen
-	@RestartRequired
-	var storageType: StorageType = StorageType.WORLD_NBT
+	@RegexConstraint("^[^\\s]{1,5}$")
+	var currencySymbol: String = "£"
+
+	@JvmField
+	@RangeConstraint(min = 0.0, max = 0.99)
+	var transferTax: Float = 0F
 
 	@JvmField
 	@RestartRequired
 	var commandAliases: List<String> = listOf("be")
 
 	@JvmField
-	@RegexConstraint("^[^\\s]{1,5}$")
-	var currencySymbol: String = "£"
-
-	@JvmField
-	var whitelist: List<String> = emptyList()
-
-	@JvmField
-	var blacklist: List<String> = emptyList()
-
-	@JvmField
-	@RangeConstraint(min = 0.0, max = 0.99)
-	var transferTax: Float = 0F
+	@ExcludeFromScreen
+	@RestartRequired
+	var storageType: StorageType = StorageType.WORLD_NBT
 }
