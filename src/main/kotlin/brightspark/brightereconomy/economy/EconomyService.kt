@@ -4,6 +4,9 @@ import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.economy.TransactionExchangeResult.*
 import brightspark.brightereconomy.persistance.EconomyStorage
 import net.minecraft.item.ItemStack
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZonedDateTime
 import java.util.*
 
 object EconomyService {
@@ -66,10 +69,21 @@ object EconomyService {
 		uuidTo: UUID?,
 		money: Long,
 		initiatorName: String
-	): TransactionExchangeResult =
-		exchange(uuidFrom, uuidTo, money, initiatorName).also {
+	): TransactionExchangeResult {
+		getRemainingTransferLimit(uuidFrom)?.let {
+			if (it < money) {
+				BrighterEconomy.LOG.atInfo()
+					.setMessage("Transfer failure {} from {} to {} initiated by {} due to {}")
+					.addArgument(money).addArgument(uuidFrom).addArgument(uuidTo).addArgument(initiatorName)
+					.addArgument(OVER_DAILY_LIMIT)
+					.log()
+				return OVER_DAILY_LIMIT
+			}
+		}
+		return exchange(uuidFrom, uuidTo, money, initiatorName).also {
 			if (it == SUCCESS) transactionTransfer(uuidFrom, uuidTo, money)
 		}
+	}
 
 	fun purchase(
 		shopId: UUID,
@@ -108,6 +122,29 @@ object EconomyService {
 	}
 
 	fun getTransactions(): Sequence<Transaction> = storage.getTransactions()
+
+	fun getRemainingTransferLimit(player: UUID?): Int? {
+		if (player == null) return null
+		val limit = BrighterEconomy.CONFIG.baseDailyTransferLimit().toLong()
+		if (limit < 0) return null
+		val transferredToday = getTransferredToday(storage.getAccount(player))
+		return (limit - transferredToday).toInt()
+	}
+
+	private fun getTransferredToday(account: PlayerAccount): Long {
+		val zoneId = BrighterEconomy.TIME_ZONE_ID
+		val timeDayStart = LocalDate.now(zoneId).atStartOfDay(zoneId)
+		var transferredToday: Long = 0
+		storage.getTransactions()
+			.filter { it.uuidFrom == account.uuid }
+			.forEach {
+				if (ZonedDateTime.ofInstant(Instant.ofEpochSecond(it.timestamp), zoneId).isAfter(timeDayStart))
+					transferredToday += it.money
+				else
+					return transferredToday
+			}
+		return transferredToday
+	}
 
 	private fun validateExchange(from: PlayerAccount?, to: PlayerAccount?, money: Long): TransactionExchangeResult {
 		from?.takeIf { it.locked }?.let {

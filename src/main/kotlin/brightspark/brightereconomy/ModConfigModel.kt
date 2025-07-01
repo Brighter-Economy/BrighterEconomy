@@ -35,8 +35,16 @@ class ModConfigModel {
 	var transferTax: Float = 0F
 
 	@JvmField
+	@RangeConstraint(min = -1.0, max = Int.MAX_VALUE.toDouble())
+	var baseDailyTransferLimit: Int = -1
+
+	@SectionHeader("misc")
+	@JvmField
 	@RestartRequired
 	var commandAliases: List<String> = listOf("be")
+
+	@JvmField
+	var timeZoneId: String = "UTC"
 
 	@JvmField
 	@ExcludeFromScreen

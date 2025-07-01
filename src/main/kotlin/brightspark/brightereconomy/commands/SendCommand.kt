@@ -22,19 +22,33 @@ object SendCommand : Command("send", {
 }) {
 	private fun send(ctx: CommandContext<ServerCommandSource>): Int {
 		val player = PlayerProfileArgumentType.get(ctx, "player")
+		val sourcePlayerId = ctx.source.player?.uuid
 		val amount = LongArgumentType.getLong(ctx, "amount")
-		val result = EconomyService.transfer(ctx.source.player?.uuid, player.id, amount, ctx.source.name)
-		if (result == TransactionExchangeResult.SUCCESS) {
-			val formattedAmount = Util.formatMoney(amount)
-			ctx.source.sendMessage(Text.of("Sent $formattedAmount to ${player.name}"))
-			ctx.getPlayer(player.id)?.sendMessage(Text.of("${ctx.source.name} has sent you $formattedAmount"))
-			return 1
-		} else {
-			ctx.source.sendMessage(
-				Text.literal("Failed to send ${Util.formatMoney(amount)} to ${player.name} due to ")
-					.append(result.text)
-			)
-			return 0
+		val result = EconomyService.transfer(sourcePlayerId, player.id, amount, ctx.source.name)
+		val formattedAmount = Util.formatMoney(amount)
+		when (result) {
+			TransactionExchangeResult.SUCCESS -> {
+				ctx.source.sendMessage(Text.of("Sent $formattedAmount to ${player.name}"))
+				ctx.getPlayer(player.id)?.sendMessage(Text.of("${ctx.source.name} has sent you $formattedAmount"))
+				return 1
+			}
+			TransactionExchangeResult.OVER_DAILY_LIMIT -> {
+				val remainingLimit = EconomyService.getRemainingTransferLimit(sourcePlayerId)
+					?.let { Util.formatMoney(it.toLong()) }
+				ctx.source.sendMessage(
+					Text.literal("Failed to send $formattedAmount to ${player.name} due to ")
+						.append(result.text)
+						.append(Text.literal(" (max $remainingLimit today)"))
+				)
+				return 0
+			}
+			else -> {
+				ctx.source.sendMessage(
+					Text.literal("Failed to send $formattedAmount to ${player.name} due to ")
+						.append(result.text)
+				)
+				return 0
+			}
 		}
 	}
 }

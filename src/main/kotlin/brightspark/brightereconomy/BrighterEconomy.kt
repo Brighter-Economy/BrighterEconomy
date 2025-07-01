@@ -43,6 +43,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
+import java.time.ZoneId
 import java.util.*
 
 object BrighterEconomy : ModInitializer {
@@ -62,8 +63,12 @@ object BrighterEconomy : ModInitializer {
 	lateinit var SHOP_OWNER_SCREEN_HANDLER: ScreenHandlerType<ShopOwnerScreenHandler>
 	lateinit var SHOP_CUSTOMER_SCREEN_HANDLER: ScreenHandlerType<ShopCustomerScreenHandler>
 
+	val TIME_ZONE_ID: ZoneId
+		get() = ZoneId.of(CONFIG.timeZoneId())
+
 	override fun onInitialize() {
 		SERVER_RESOURCES_DIR_FILE.mkdirs()
+		TIME_ZONE_ID // Validate time zone
 
 		// Events
 		ServerLifecycleEvents.SERVER_STARTING.register { SERVER = Optional.of(it) }
