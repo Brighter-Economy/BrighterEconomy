@@ -19,7 +19,7 @@ object BalanceCommand : Command("balance", {
 	executes { ctx -> BalanceCommand.balance(ctx) }
 
 	thenArgument("player", playerAccountArg()) {
-		requiresPermission("player", PermissionLevel.OP)
+		requiresPermission("balance.player", PermissionLevel.OP)
 
 		executes { ctx ->
 			val playerAccount = PlayerAccountArgumentType.get(ctx, "player")

@@ -25,6 +25,9 @@ data class PlayerAccount(
 		)
 	}
 
+	val remainingTransferLimit: Int?
+		get() = EconomyService.getRemainingTransferLimit(this)
+
 	constructor(nbt: NbtCompound) : this(
 		nbt.getUuid("uuid"),
 		nbt.getBoolean("locked"),

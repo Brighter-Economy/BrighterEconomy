@@ -13,6 +13,7 @@ object BaseCommand : Command(BrighterEconomy.MOD_ID, {
 	thenCommand(SendCommand)
 	thenCommand(RequestCommand)
 	thenCommand(SendClientDataCommand)
+	thenCommand(AccountCommand)
 }) {
 	init {
 		BrighterEconomy.CONFIG.commandAliases().asSequence()

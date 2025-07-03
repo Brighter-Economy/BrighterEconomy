@@ -107,13 +107,13 @@ class ShopCustomerScreenHandler(
 
 		// Notify player
 		player.sendMessage(
-			Util.messageText(
+			Util.messageTextSecondary(
 				"text.brightereconomy.player_shop.purchase.success",
 				itemAmount.toString(),
 				forSaleStack.get().name,
 				Util.formatMoney(cost),
 				Util.getUsername(ownerUuid) ?: "<unknown>"
-			)
+			).styled { it.withItalic(true) }
 		)
 
 		// Give to player
@@ -124,12 +124,12 @@ class ShopCustomerScreenHandler(
 		}
 	}
 
-	private fun failureMessageText(itemAmount: Int, cost: Long, failureReason: Text): Text = Util.messageText(
+	private fun failureMessageText(itemAmount: Int, cost: Long, failureReason: Text): Text = Util.messageTextSecondary(
 		"text.brightereconomy.player_shop.purchase.failure",
 		itemAmount.toString(),
 		forSaleStack.get().name,
 		Util.formatMoney(cost),
 		Util.getUsername(ownerUuid) ?: "<unknown>",
 		failureReason
-	)
+	).styled { it.withItalic(true) }
 }

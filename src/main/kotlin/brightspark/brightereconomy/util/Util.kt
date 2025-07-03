@@ -10,6 +10,10 @@ import java.util.*
 
 object Util {
 	val SLOT_TEXTURE = Identifier(BrighterEconomy.MOD_ID, "textures/gui/slot.png")
+	val COLOUR_PRIMARY_BASE = Formatting.AQUA
+	val COLOUR_PRIMARY_ARG = Formatting.GREEN
+	val COLOUR_SECONDARY_BASE = Formatting.DARK_AQUA
+	val COLOUR_SECONDARY_ARG = Formatting.DARK_GREEN
 
 	private val FORMAT_MONEY = NumberFormat.getNumberInstance()
 
@@ -21,13 +25,28 @@ object Util {
 		.map { it.name }
 		.orElse(null)
 
-	private fun whiteText(): MutableText = Text.empty().styled { it.withFormatting(Formatting.WHITE) }
+	fun text(text: Any, colour: Formatting): MutableText =
+		if (text is Text)
+			Text.empty().styled { it.withColor(colour) }.append(text)
+		else
+			Text.literal(text.toString()).styled { it.withColor(colour) }
 
-	private fun whiteText(text: String): Text = Text.literal(text).styled { it.withFormatting(Formatting.WHITE) }
+	fun textLang(langKey: String, colour: Formatting, vararg args: Any): MutableText =
+		Text.translatable(langKey, *args).styled { it.withColor(colour) }
 
-	fun messageText(langKey: String, vararg args: Any): Text =
-		Text.translatable(
-			langKey,
-			*args.map { if (it is Text) whiteText().append(it) else whiteText(it.toString()) }.toTypedArray()
-		).styled { it.withFormatting(Formatting.GRAY, Formatting.ITALIC) }
+	fun messageTextPrimary(langKey: String, vararg args: Any): MutableText =
+		messageText(COLOUR_PRIMARY_BASE, COLOUR_PRIMARY_ARG, langKey, args)
+
+	fun messageTextSecondary(langKey: String, vararg args: Any): MutableText =
+		messageText(COLOUR_SECONDARY_BASE, COLOUR_SECONDARY_ARG, langKey, args)
+
+	private fun messageText(
+		baseColour: Formatting,
+		argColour: Formatting,
+		langKey: String,
+		args: Array<out Any>
+	): MutableText {
+		val textArgs = args.map { text(it, argColour) }.toTypedArray()
+		return Text.translatable(langKey, *textArgs).styled { it.withColor(baseColour) }
+	}
 }

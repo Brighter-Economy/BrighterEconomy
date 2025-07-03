@@ -131,6 +131,13 @@ object EconomyService {
 		return (limit - transferredToday).toInt()
 	}
 
+	fun getRemainingTransferLimit(account: PlayerAccount): Int? {
+		val limit = BrighterEconomy.CONFIG.baseDailyTransferLimit().toLong()
+		if (limit < 0) return null
+		val transferredToday = getTransferredToday(account)
+		return (limit - transferredToday).toInt()
+	}
+
 	private fun getTransferredToday(account: PlayerAccount): Long {
 		val zoneId = BrighterEconomy.TIME_ZONE_ID
 		val timeDayStart = LocalDate.now(zoneId).atStartOfDay(zoneId)
