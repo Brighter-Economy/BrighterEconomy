@@ -181,6 +181,13 @@ paths:
     get:
       description: Gets all shops
       tags: [ shops ]
+      parameters:
+        - in: query
+          name: itemId
+          schema:
+            type: string
+          required: false
+          description: Filter for the item being sold at shops
       responses:
         "200":
           description: OK

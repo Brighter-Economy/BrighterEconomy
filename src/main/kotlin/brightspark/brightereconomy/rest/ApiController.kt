@@ -64,7 +64,8 @@ object ApiController {
 		}
 
 		get("/shops") {
-			call.respond(ShopService.getShops())
+			val itemId: String? = call.queryParameters.getOptional("itemId", null)
+			call.respond(ShopService.getShops(itemId))
 		}
 
 		route("/items") {
@@ -79,6 +80,6 @@ object ApiController {
 		}
 	}
 
-	private inline fun <reified R : Any> Parameters.getOptional(name: String, default: R): R =
-		if (name in this) this.getOrFail<R>(name) else default
+	private inline fun <reified R : Any?> Parameters.getOptional(name: String, default: R): R =
+		(if (name in this) this.getOrFail(name) else default) as R
 }
