@@ -25,7 +25,7 @@ fun throwIfShopTrackerStateNull() {
 
 fun throwIfItemLocalisedNameStateNull() {
 	try {
-		ItemService.itemLocalisedNameStorage
+		ItemService.localisedNameStorage
 	} catch (e: Throwable) {
 		throw mcNotAvailableException(e)
 	}

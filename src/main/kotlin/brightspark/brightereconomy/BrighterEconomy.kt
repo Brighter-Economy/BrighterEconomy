@@ -8,6 +8,7 @@ import brightspark.brightereconomy.commands.argtype.PlayerProfileArgumentType
 import brightspark.brightereconomy.economy.PlayerAccount
 import brightspark.brightereconomy.items.ShopBlockItem
 import brightspark.brightereconomy.network.ItemDataPacket
+import brightspark.brightereconomy.network.EnchantmentNamesPacket
 import brightspark.brightereconomy.network.ServerPacket
 import brightspark.brightereconomy.rest.RestController
 import brightspark.brightereconomy.screen.ShopCustomerScreenHandler
@@ -127,6 +128,7 @@ object BrighterEconomy : ModInitializer {
 
 		// Network
 		regServerPacket<ItemDataPacket>()
+		regServerPacket<EnchantmentNamesPacket>()
 		PacketBufSerializer.register(PlayerAccount::class.java, PlayerAccount.SERIALIZER)
 	}
 

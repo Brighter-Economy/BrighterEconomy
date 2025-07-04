@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class ItemStackDto(
 	val item: String,
 	val count: Int,
+	val name: String?,
 	val customName: String?,
 	val enchantments: List<EnchantmentDto>,
 	val lore: String?

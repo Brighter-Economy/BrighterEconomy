@@ -96,7 +96,7 @@ class ItemImageGeneratorScreen : Screen(Text.literal("")) {
 			return
 
 		BrighterEconomy.NETWORK.clientHandle().send(ItemDataPacket(processedItems.toList()))
-		BrighterEconomy.LOG.info("Sent ${processedItems.size} item images to server")
+		BrighterEconomy.LOG.info("Sent ${processedItems.size} item data to server")
 		processedItems.clear()
 	}
 }
