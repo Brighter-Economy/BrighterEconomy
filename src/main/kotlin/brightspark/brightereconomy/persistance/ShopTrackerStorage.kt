@@ -2,7 +2,7 @@ package brightspark.brightereconomy.persistance
 
 import brightspark.brightereconomy.blocks.ShopBlockEntity
 import brightspark.brightereconomy.shops.Shop
-import brightspark.brightereconomy.shops.ShopTrackerState
+import brightspark.brightereconomy.persistance.persistentstate.ShopTrackerState
 import java.util.*
 
 interface ShopTrackerStorage {

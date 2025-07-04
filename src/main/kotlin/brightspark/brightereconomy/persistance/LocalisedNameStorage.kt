@@ -1,6 +1,6 @@
 package brightspark.brightereconomy.persistance
 
-import brightspark.brightereconomy.persistance.miscstate.LocalisedNameState
+import brightspark.brightereconomy.persistance.persistentstate.LocalisedNameState
 import net.minecraft.util.Identifier
 
 interface LocalisedNameStorage {

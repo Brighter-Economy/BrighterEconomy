@@ -1,13 +1,13 @@
-package brightspark.brightereconomy.shops
+package brightspark.brightereconomy.persistance.persistentstate
 
 import brightspark.brightereconomy.blocks.ShopBlockEntity
-import brightspark.brightereconomy.persistance.PersistentStateProvider
 import brightspark.brightereconomy.persistance.ShopTrackerStorage
+import brightspark.brightereconomy.shops.Shop
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtElement
 import net.minecraft.nbt.NbtList
 import net.minecraft.world.PersistentState
-import java.util.*
+import java.util.UUID
 
 class ShopTrackerState : PersistentState, ShopTrackerStorage {
 	companion object : PersistentStateProvider<ShopTrackerState>("shop-tracker", ::ShopTrackerState, ::ShopTrackerState)

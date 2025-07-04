@@ -1,7 +1,7 @@
 package brightspark.brightereconomy.persistance
 
 import brightspark.brightereconomy.BrighterEconomy
-import brightspark.brightereconomy.economy.EconomyState
+import brightspark.brightereconomy.persistance.persistentstate.EconomyState
 import brightspark.brightereconomy.economy.PlayerAccount
 import brightspark.brightereconomy.economy.PlayerAccountListener
 import brightspark.brightereconomy.economy.Transaction

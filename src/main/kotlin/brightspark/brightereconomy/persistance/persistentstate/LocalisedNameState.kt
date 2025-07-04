@@ -1,7 +1,7 @@
-package brightspark.brightereconomy.persistance.miscstate
+package brightspark.brightereconomy.persistance.persistentstate
 
 import brightspark.brightereconomy.persistance.LocalisedNameStorage
-import brightspark.brightereconomy.persistance.PersistentStateProvider
+import brightspark.brightereconomy.persistance.persistentstate.PersistentStateProvider
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtElement
 import net.minecraft.nbt.NbtList

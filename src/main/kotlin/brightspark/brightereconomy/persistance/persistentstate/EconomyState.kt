@@ -1,12 +1,14 @@
-package brightspark.brightereconomy.economy
+package brightspark.brightereconomy.persistance.persistentstate
 
+import brightspark.brightereconomy.economy.PlayerAccount
+import brightspark.brightereconomy.economy.Transaction
 import brightspark.brightereconomy.persistance.EconomyStorage
-import brightspark.brightereconomy.persistance.PersistentStateProvider
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtElement
 import net.minecraft.nbt.NbtList
 import net.minecraft.world.PersistentState
-import java.util.*
+import java.util.UUID
+import kotlin.collections.plusAssign
 
 class EconomyState : PersistentState, EconomyStorage {
 	companion object : PersistentStateProvider<EconomyState>("economy", ::EconomyState, ::EconomyState)

@@ -1,4 +1,4 @@
-package brightspark.brightereconomy.persistance
+package brightspark.brightereconomy.persistance.persistentstate
 
 import brightspark.brightereconomy.BrighterEconomy
 import net.minecraft.nbt.NbtCompound
