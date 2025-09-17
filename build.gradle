@@ -53,6 +53,13 @@ dependencies {
     implementation("io.ktor:ktor-server-openapi-jvm:${project.ktor_version}")
     implementation("io.ktor:ktor-server-swagger-jvm:${project.ktor_version}")
 
+    include implementation("org.jetbrains.exposed:exposed-core:${project.exposed_version}")
+    include implementation("org.jetbrains.exposed:exposed-jdbc:${project.exposed_version}")
+    include implementation("org.jetbrains.exposed:exposed-dao:${project.exposed_version}")
+    include implementation("org.jetbrains.exposed:exposed-kotlin-datetime:${project.exposed_version}")
+    include implementation("org.xerial:sqlite-jdbc:${project.sqlite_version}")
+    include implementation("mysql:mysql-connector-java:${project.mysql_version}")
+
     // Inclusions required for Ktor dependencies
     include "io.ktor:ktor-server-core-jvm:${project.ktor_version}"
     include "io.ktor:ktor-utils:${project.ktor_version}"

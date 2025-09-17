@@ -1,15 +1,15 @@
 package brightspark.brightereconomy.persistance
 
 import brightspark.brightereconomy.BrighterEconomy
-import brightspark.brightereconomy.persistance.persistentstate.EconomyState
 import brightspark.brightereconomy.economy.PlayerAccount
 import brightspark.brightereconomy.economy.PlayerAccountListener
 import brightspark.brightereconomy.economy.Transaction
+import brightspark.brightereconomy.persistance.database.EconomyDb
 import java.util.*
 
 interface EconomyStorage {
-	companion object : BaseStorageProvider<EconomyStorage>() {
-		override fun getPersistentState(): EconomyStorage = EconomyState.get()
+	companion object : StorageProvider<EconomyStorage> {
+		override fun getStorage(): EconomyStorage = EconomyDb
 
 		fun onPlayerAccountUpdated(account: PlayerAccount) = BrighterEconomy.SERVER.ifPresent { server ->
 			server.playerManager.playerList.asSequence()

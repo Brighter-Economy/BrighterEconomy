@@ -46,8 +46,25 @@ class ModConfigModel {
 	@JvmField
 	var timeZoneId: String = "UTC"
 
+	// ==== DB CONFIG ====
+
 	@JvmField
 	@ExcludeFromScreen
 	@RestartRequired
-	var storageType: StorageType = StorageType.WORLD_NBT
+	var dbType: StorageType = StorageType.SQLITE
+
+	@JvmField
+	@ExcludeFromScreen
+	@RestartRequired
+	var dbUrl: String = "brightereconomy.db"
+
+	@JvmField
+	@ExcludeFromScreen
+	@RestartRequired
+	var dbUsername: String = ""
+
+	@JvmField
+	@ExcludeFromScreen
+	@RestartRequired
+	var dbPassword: String = ""
 }

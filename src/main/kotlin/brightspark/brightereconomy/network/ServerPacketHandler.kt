@@ -18,20 +18,39 @@ object ServerPacketHandler {
 					close()
 				}
 
-				setItemName(itemId, it.localisedName)
-
-				BrighterEconomy.LOG.atInfo()
-					.setMessage("Received item {} image {} and localised name '{}'")
-					.addArgument(itemId).addArgument(imagePath).addArgument(it.localisedName)
+				BrighterEconomy.LOG.atDebug()
+					.setMessage("Received item {} image {}")
+					.addArgument(itemId).addArgument(imagePath)
 					.log()
 			}
+
+			setItemNames(
+				packet.data.asSequence()
+					.map { it.itemId to it.localisedName }
+					.onEach {
+						BrighterEconomy.LOG.atDebug()
+							.setMessage("Received item {} localised name '{}'")
+							.addArgument(it.first).addArgument(it.second)
+							.log()
+					}
+			)
 		}
+		BrighterEconomy.LOG.atInfo().setMessage("Received data for {} items").addArgument(packet.data.size).log()
 	}
 
 	fun onLocalisedNamesPacket(packet: EnchantmentNamesPacket) {
 		LocalisedNameStorage.getStorage().apply {
-			packet.data.forEach { (id, name) -> setEnchantmentName(Identifier(id), name) }
-			BrighterEconomy.LOG.atInfo().setMessage("Received {} enchantment names").addArgument(packet.data.size).log()
+			setEnchantmentNames(
+				packet.data.asSequence()
+					.map { it.key to it.value }
+					.onEach { (id, name) ->
+						BrighterEconomy.LOG.atDebug()
+							.setMessage("Received enchantment {} localised name '{}'")
+							.addArgument(id).addArgument(name)
+							.log()
+					}
+			)
 		}
+		BrighterEconomy.LOG.atInfo().setMessage("Received data for {} enchantments").addArgument(packet.data.size).log()
 	}
 }

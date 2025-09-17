@@ -1,13 +1,13 @@
 package brightspark.brightereconomy.persistance
 
 import brightspark.brightereconomy.blocks.ShopBlockEntity
+import brightspark.brightereconomy.persistance.database.ShopTrackerDb
 import brightspark.brightereconomy.shops.Shop
-import brightspark.brightereconomy.persistance.persistentstate.ShopTrackerState
 import java.util.*
 
 interface ShopTrackerStorage {
-	companion object : BaseStorageProvider<ShopTrackerStorage>() {
-		override fun getPersistentState(): ShopTrackerStorage = ShopTrackerState.get()
+	companion object : StorageProvider<ShopTrackerStorage> {
+		override fun getStorage(): ShopTrackerStorage = ShopTrackerDb
 	}
 
 	fun getShops(): Collection<Shop>

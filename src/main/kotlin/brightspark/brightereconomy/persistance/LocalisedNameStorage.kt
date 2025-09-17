@@ -1,18 +1,18 @@
 package brightspark.brightereconomy.persistance
 
-import brightspark.brightereconomy.persistance.persistentstate.LocalisedNameState
+import brightspark.brightereconomy.persistance.database.LocalisedNameDb
 import net.minecraft.util.Identifier
 
 interface LocalisedNameStorage {
-	companion object : BaseStorageProvider<LocalisedNameStorage>() {
-		override fun getPersistentState(): LocalisedNameStorage = LocalisedNameState.get()
+	companion object : StorageProvider<LocalisedNameStorage> {
+		override fun getStorage(): LocalisedNameStorage = LocalisedNameDb
 	}
 
 	fun getItemName(id: Identifier): String?
 
-	fun setItemName(id: Identifier, name: String)
+	fun setItemNames(names: Sequence<Pair<String, String>>)
 
 	fun getEnchantmentName(id: Identifier): String?
 
-	fun setEnchantmentName(id: Identifier, name: String)
+	fun setEnchantmentNames(names: Sequence<Pair<String, String>>)
 }

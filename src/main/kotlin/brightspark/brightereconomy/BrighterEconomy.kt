@@ -10,6 +10,7 @@ import brightspark.brightereconomy.items.ShopBlockItem
 import brightspark.brightereconomy.network.ItemDataPacket
 import brightspark.brightereconomy.network.EnchantmentNamesPacket
 import brightspark.brightereconomy.network.ServerPacket
+import brightspark.brightereconomy.persistance.database.DbConnection
 import brightspark.brightereconomy.rest.RestController
 import brightspark.brightereconomy.screen.ShopCustomerScreenHandler
 import brightspark.brightereconomy.screen.ShopOwnerScreenHandler
@@ -69,11 +70,14 @@ object BrighterEconomy : ModInitializer {
 
 	override fun onInitialize() {
 		SERVER_RESOURCES_DIR_FILE.mkdirs()
-		TIME_ZONE_ID // Validate time zone
+		validateConfig()
 
 		// Events
 		ServerLifecycleEvents.SERVER_STARTING.register { SERVER = Optional.of(it) }
-		ServerLifecycleEvents.SERVER_STARTED.register { RestController.init() }
+		ServerLifecycleEvents.SERVER_STARTED.register {
+			DbConnection.connect()
+			RestController.init()
+		}
 		ServerLifecycleEvents.SERVER_STOPPING.register { RestController.shutdown() }
 		ServerLifecycleEvents.SERVER_STOPPED.register { SERVER = Optional.empty() }
 
@@ -130,6 +134,10 @@ object BrighterEconomy : ModInitializer {
 		regServerPacket<ItemDataPacket>()
 		regServerPacket<EnchantmentNamesPacket>()
 		PacketBufSerializer.register(PlayerAccount::class.java, PlayerAccount.SERIALIZER)
+	}
+
+	private fun validateConfig() {
+		TIME_ZONE_ID // Validate time zone
 	}
 
 	inline fun <reified T> regServerPacket() where T : Record, T : ServerPacket {
