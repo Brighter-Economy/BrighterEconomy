@@ -40,8 +40,9 @@ object RequestCommand : Command("request", {
 				Text.literal("${ctx.source.name} has requested $formattedAmount from you - ")
 					.append(Text.literal("[Accept]").styled {
 						it.withFormatting(Formatting.GREEN)
-							.withClickEvent(ClickEvent(RUN_COMMAND, acceptCommand))
-					})
+							.withClickEvent(ClickEvent.RunCommand(acceptCommand))
+					}),
+				false
 			)
 			ctx.source.sendMessage(Text.of("Requested $formattedAmount from ${player.name}"))
 			return 1

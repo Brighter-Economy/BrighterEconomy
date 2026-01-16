@@ -111,14 +111,18 @@ object EconomyService {
 		transactionModify(uuid, diff)
 	}
 
-	fun lockAccount(uuid: UUID) {
+	fun lockAccount(uuid: UUID, initiatorName: String) {
 		setAccountLock(uuid, true)
-		BrighterEconomy.LOG.atInfo().setMessage("Locked account {}").addArgument(uuid).log()
+		BrighterEconomy.LOG.atInfo().setMessage("Locked account {} by {}")
+			.addArgument(uuid).addArgument(initiatorName)
+			.log()
 	}
 
-	fun unlockAccount(uuid: UUID) {
+	fun unlockAccount(uuid: UUID, initiatorName: String) {
 		setAccountLock(uuid, false)
-		BrighterEconomy.LOG.atInfo().setMessage("Unlocked account {}").addArgument(uuid).log()
+		BrighterEconomy.LOG.atInfo().setMessage("Unlocked account {} by {}")
+			.addArgument(uuid).addArgument(initiatorName)
+			.log()
 	}
 
 	fun getTransactions(): Sequence<Transaction> = storage.getTransactions()

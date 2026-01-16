@@ -1,29 +1,46 @@
 package brightspark.brightereconomy.util
 
 import brightspark.brightereconomy.BrighterEconomy
+import com.google.gson.Gson
+import com.google.gson.JsonObject
+import com.mojang.authlib.GameProfile
+import com.mojang.serialization.JsonOps
+import net.minecraft.component.ComponentMap
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
+import net.minecraft.util.UserCache
 import java.text.NumberFormat
 import java.util.*
 
 object Util {
-	val SLOT_TEXTURE = Identifier(BrighterEconomy.MOD_ID, "textures/gui/slot.png")
+	val SLOT_TEXTURE: Identifier = Identifier.of(BrighterEconomy.MOD_ID, "textures/gui/slot.png")
 	val COLOUR_PRIMARY_BASE = Formatting.AQUA
 	val COLOUR_PRIMARY_ARG = Formatting.GREEN
 	val COLOUR_SECONDARY_BASE = Formatting.DARK_AQUA
 	val COLOUR_SECONDARY_ARG = Formatting.DARK_GREEN
 
+	val GSON = Gson()
+
 	private val FORMAT_MONEY = NumberFormat.getNumberInstance()
 
 	fun formatMoney(money: Long): String = BrighterEconomy.CONFIG.currencySymbol() + FORMAT_MONEY.format(money)
 
-	fun getUsername(uuid: UUID): String? = BrighterEconomy.SERVER
-		.flatMap { Optional.ofNullable(it.userCache) }
-		.flatMap { it.getByUuid(uuid) }
-		.map { it.name }
-		.orElse(null)
+	fun getServerUserCache(): Optional<UserCache> =
+		BrighterEconomy.SERVER.flatMap { Optional.ofNullable(it.userCache) }
+
+	fun getGameProfileByUuid(uuid: UUID): Optional<GameProfile> =
+		getServerUserCache().flatMap { it.getByUuid(uuid) }
+
+	fun getGameProfileByName(username: String): Optional<GameProfile> =
+		getServerUserCache().flatMap { it.findByName(username) }
+
+	fun getUsername(uuid: UUID): Optional<String> =
+		getGameProfileByUuid(uuid).map { it.name }
+
+	fun getUuid(username: String): Optional<UUID> =
+		getGameProfileByName(username).map { it.id }
 
 	fun text(text: Any, colour: Formatting): MutableText =
 		if (text is Text)
@@ -49,4 +66,15 @@ object Util {
 		val textArgs = args.map { text(it, argColour) }.toTypedArray()
 		return Text.translatable(langKey, *textArgs).styled { it.withColor(baseColour) }
 	}
+
+	fun componentsToJsonString(components: ComponentMap): Optional<String> =
+		ComponentMap.CODEC.encodeStart(JsonOps.COMPRESSED, components)
+			.resultOrPartial { BrighterEconomy.LOG.error("Error serialising components: $it") }
+			.map { GSON.toJson(it) }
+
+	fun jsonStringToComponents(jsonString: String): Optional<ComponentMap> =
+		GSON.fromJson(jsonString, JsonObject::class.java)
+			.let { ComponentMap.CODEC.decode(JsonOps.COMPRESSED, it) }
+			.resultOrPartial { BrighterEconomy.LOG.error("Error deserialising components: $it") }
+			.map { it.first }
 }

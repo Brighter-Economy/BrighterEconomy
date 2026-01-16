@@ -16,7 +16,7 @@ object UnlockCommand : Command("unlock", {
 }) {
 	private fun unlockAccount(ctx: CommandContext<ServerCommandSource>): Int {
 		val player = PlayerProfileArgumentType.get(ctx, "player")
-		EconomyService.unlockAccount(player.id)
+		EconomyService.unlockAccount(player.id, ctx.source.name)
 		ctx.source.sendMessage(Text.of("Unlocked ${player.name}'s account"))
 		return 1
 	}

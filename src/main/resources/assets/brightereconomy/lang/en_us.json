@@ -2,6 +2,7 @@
 	"itemGroup.brightereconomy.group": "Brighter Economy",
 	"block.brightereconomy.player_shop": "Player Shop",
 	"block.brightereconomy.server_shop": "Server Shop",
+
 	"text.brightereconomy.command.account.title": "%s's Account Details",
 	"text.brightereconomy.command.account.details.balance": "Balance: %s",
 	"text.brightereconomy.command.account.details.locked": "Locked: %s",
@@ -9,20 +10,29 @@
 	"text.brightereconomy.player_shop.purchase.success": "Bought %s %s for %s from %s",
 	"text.brightereconomy.player_shop.purchase.failure": "Failed to buy %s %s for %s from %s due to %s",
 	"text.brightereconomy.player_shop.purchase.failure.no_items": "no stock",
+
 	"brightereconomy.transaction.result.success": "success",
 	"brightereconomy.transaction.result.insufficient": "insufficient money",
 	"brightereconomy.transaction.result.overflow": "too much money",
 	"brightereconomy.transaction.result.from_locked": "account source locked",
 	"brightereconomy.transaction.result.to_locked": "account destination locked",
 	"brightereconomy.transaction.result.over_daily_limit": "over daily limit",
+
 	"text.config.brightereconomy.title": "Brighter Economy Config",
 	"text.config.brightereconomy.section.server_api": "Server API",
-	"text.config.brightereconomy.section.economy": "Economy",
-	"text.config.brightereconomy.section.misc": "Misc",
 	"text.config.brightereconomy.option.apiEnabled": "API Enabled",
 	"text.config.brightereconomy.option.apiPort": "API Port",
+	"text.config.brightereconomy.option.adminUsernames": "Admin Usernames",
+	"text.config.brightereconomy.section.economy": "Economy",
 	"text.config.brightereconomy.option.currencySymbol": "Currency Symbol",
 	"text.config.brightereconomy.option.transferTax": "Transfer Tax",
 	"text.config.brightereconomy.option.baseDailyTransferLimit": "Base Daily Transfer Limit",
-	"text.config.brightereconomy.option.commandAliases": "Command Aliases"
+	"text.config.brightereconomy.section.misc": "Misc",
+	"text.config.brightereconomy.option.commandAliases": "Command Aliases",
+	"text.config.brightereconomy.option.timeZoneId": "Time Zone ID",
+	"text.config.brightereconomy.section.db": "Database",
+	"text.config.brightereconomy.option.dbType": "Database Type",
+	"text.config.brightereconomy.option.dbUrl": "Database URL",
+	"text.config.brightereconomy.option.dbUsername": "Database Username",
+	"text.config.brightereconomy.option.dbPassword": "Database Password"
 }

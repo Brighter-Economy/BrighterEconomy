@@ -3,6 +3,7 @@ package brightspark.brightereconomy.blocks
 import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.shops.ShopTrackerService
 import brightspark.brightereconomy.util.sendLiteralOverlayMessage
+import com.mojang.serialization.MapCodec
 import net.minecraft.block.Block
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
@@ -14,6 +15,7 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.Properties
 import net.minecraft.util.*
@@ -23,8 +25,11 @@ import net.minecraft.world.World
 
 class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 	companion object {
+		private val CODEC = createCodec(::ShopBlock)
 		private val FACING = Properties.HORIZONTAL_FACING
 	}
+
+	override fun getCodec(): MapCodec<ShopBlock> = CODEC
 
 	override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = ShopBlockEntity(pos, state)
 
@@ -33,7 +38,7 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 		state: BlockState?,
 		type: BlockEntityType<T>?
 	): BlockEntityTicker<T>? =
-		checkType(type, BrighterEconomy.SHOP_BLOCK_ENTITY) { w, p, s, be -> be.tick(w) }
+		validateTicker(type, BrighterEconomy.SHOP_BLOCK_ENTITY) { w, _, _, be -> be.tick(w) }
 
 	override fun onPlaced(
 		world: World,
@@ -51,7 +56,7 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 				{
 					BrighterEconomy.LOG.atError()
 						.setMessage("Can't get shop block entity when added at {} {}")
-						.addArgument(world.dimensionKey.value).addArgument(pos)
+						.addArgument(world.dimensionEntry.idAsString).addArgument(pos)
 						.log()
 				}
 			)
@@ -59,25 +64,17 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 		super.onPlaced(world, pos, state, placer, itemStack)
 	}
 
-	override fun onStateReplaced(
-		state: BlockState,
-		world: World,
-		pos: BlockPos,
-		newState: BlockState,
-		moved: Boolean
-	) {
-		if (!state.isOf(newState.block)) {
-			world.getBlockEntity(pos, BrighterEconomy.SHOP_BLOCK_ENTITY).ifPresentOrElse(
-				{ ShopTrackerService.removeShop(it) },
-				{
-					BrighterEconomy.LOG.atError()
-						.setMessage("Can't get shop block entity when removed at {} {}")
-						.addArgument(world.dimensionKey.value).addArgument(pos)
-						.log()
-				}
-			)
-		}
-		super.onStateReplaced(state, world, pos, newState, moved)
+	override fun onStateReplaced(state: BlockState, world: ServerWorld, pos: BlockPos, moved: Boolean) {
+		world.getBlockEntity(pos, BrighterEconomy.SHOP_BLOCK_ENTITY).ifPresentOrElse(
+			{ ShopTrackerService.removeShop(it) },
+			{
+				BrighterEconomy.LOG.atError()
+					.setMessage("Can't get shop block entity when removed at {} {}")
+					.addArgument(world.dimensionEntry.idAsString).addArgument(pos)
+					.log()
+			}
+		)
+		super.onStateReplaced(state, world, pos, moved)
 	}
 
 	override fun onUse(
@@ -85,7 +82,6 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 		world: World,
 		pos: BlockPos,
 		player: PlayerEntity,
-		hand: Hand,
 		hit: BlockHitResult
 	): ActionResult {
 		if (!world.isClient()) {

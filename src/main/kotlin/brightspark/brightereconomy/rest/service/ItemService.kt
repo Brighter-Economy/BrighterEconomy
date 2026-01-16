@@ -13,7 +13,6 @@ object ItemService {
 		Registries.ITEM.keys.asSequence().map { it.value.toString() }.toList()
 
 	fun getItemLocalisedName(itemId: String): String {
-		throwIfItemLocalisedNameStateNull()
 		val id = Identifier.tryParse(itemId) ?: throw BadRequestException("Invalid item ID '$itemId'")
 		return localisedNameStorage.getItemName(id) ?: throw NotFoundException("Localised name for '$itemId' not found")
 	}

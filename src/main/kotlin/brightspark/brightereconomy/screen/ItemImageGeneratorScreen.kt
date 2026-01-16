@@ -2,6 +2,7 @@ package brightspark.brightereconomy.screen
 
 import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.network.ItemDataPacket
+import io.ktor.util.*
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.resource.language.I18n
@@ -11,6 +12,7 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
+import org.lwjgl.system.MemoryUtil
 import kotlin.math.ceil
 
 // This method of image generation was inspired by https://github.com/CyclopsMC/IconExporter
@@ -39,7 +41,7 @@ class ItemImageGeneratorScreen : Screen(Text.literal("")) {
 			processedItems += ItemDataPacket.ItemData(
 				itemPair.first.toString(),
 				I18n.translate(item.translationKey),
-				image.bytes
+				MemoryUtil.memByteBuffer(image.imageId(), image.sizeBytes.toInt()).moveToByteArray()
 			)
 			doneItems += 1
 			client!!.player?.sendMessage(Text.literal("Working... $doneItems / $totalItems"), true)
@@ -49,31 +51,31 @@ class ItemImageGeneratorScreen : Screen(Text.literal("")) {
 			sendToServer()
 	}
 
-	override fun renderBackground(context: DrawContext) = Unit
+	override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, deltaTicks: Float) = Unit
 
 	override fun close() {
 		sendToServer()
 		if (itemsLeft.isNotEmpty())
-			client!!.player?.sendMessage(Text.literal("Cancelled early at $doneItems / $totalItems"))
+			client!!.player?.sendMessage(Text.literal("Cancelled early at $doneItems / $totalItems"), false)
 		else
-			client!!.player?.sendMessage(Text.literal("Finished"))
+			client!!.player?.sendMessage(Text.literal("Finished"), false)
 		super.close()
 	}
 
 	private fun createItemImage(context: DrawContext, item: Item): NativeImage {
-		val scaledSize = IMAGE_SIZE / client!!.window.scaleFactor
+		val scaledSize = IMAGE_SIZE.toFloat() / client!!.window.scaleFactor.toFloat()
 		val scaledSizeInt = ceil(scaledSize).toInt()
-		@Suppress("UnstableApiUsage")
 		context.apply {
 			fill(0, 0, scaledSizeInt, scaledSizeInt, BG_COLOUR)
 			push()
-			val scale = scaledSize.toFloat() / 16.toFloat()
-			scale(scale, scale, 1.toFloat())
+			val scale = scaledSize / 16F
+			scale(scale, scale)
 			drawItem(ItemStack(item), 0, 0)
 			pop()
 		}
 
-		val image = ScreenshotRecorder.takeScreenshot(client!!.framebuffer)
+		lateinit var image: NativeImage
+		ScreenshotRecorder.takeScreenshot(client!!.framebuffer) { image = it }
 		val itemImage = NativeImage(IMAGE_SIZE, IMAGE_SIZE, false)
 		image.copyRect(itemImage, 0, 0, 0, 0, IMAGE_SIZE, IMAGE_SIZE, false, false)
 		image.close()
@@ -84,7 +86,7 @@ class ItemImageGeneratorScreen : Screen(Text.literal("")) {
 	private fun removeBg(image: NativeImage) {
 		(0 until image.width).forEach { x ->
 			(0 until image.height).forEach { y ->
-				if (image.getColor(x, y) == BG_COLOUR_2) {
+				if (image.getColorArgb(x, y) == BG_COLOUR_2) {
 					image.setColor(x, y, 0)
 				}
 			}

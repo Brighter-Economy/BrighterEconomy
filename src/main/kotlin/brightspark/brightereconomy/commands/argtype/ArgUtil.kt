@@ -9,7 +9,7 @@ import net.minecraft.command.EntitySelectorReader
 import java.util.concurrent.CompletableFuture
 
 object ArgUtil {
-	fun <S : Any?> listGameProfileSuggestions(
+	fun <S> listGameProfileSuggestions(
 		context: CommandContext<S>,
 		builder: SuggestionsBuilder
 	): CompletableFuture<Suggestions> = if (context.source is CommandSource) {

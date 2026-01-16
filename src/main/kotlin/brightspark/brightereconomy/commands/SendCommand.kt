@@ -29,7 +29,8 @@ object SendCommand : Command("send", {
 		when (result) {
 			TransactionExchangeResult.SUCCESS -> {
 				ctx.source.sendMessage(Text.of("Sent $formattedAmount to ${player.name}"))
-				ctx.getPlayer(player.id)?.sendMessage(Text.of("${ctx.source.name} has sent you $formattedAmount"))
+				ctx.getPlayer(player.id)
+					?.sendMessage(Text.of("${ctx.source.name} has sent you $formattedAmount"), false)
 				return 1
 			}
 			TransactionExchangeResult.OVER_DAILY_LIMIT -> {

@@ -16,7 +16,7 @@ object LockCommand : Command("lock", {
 }) {
 	private fun lockAccount(ctx: CommandContext<ServerCommandSource>): Int {
 		val player = PlayerProfileArgumentType.get(ctx, "player")
-		EconomyService.lockAccount(player.id)
+		EconomyService.lockAccount(player.id, ctx.source.name)
 		ctx.source.sendMessage(Text.of("Locked ${player.name}'s account"))
 		return 1
 	}

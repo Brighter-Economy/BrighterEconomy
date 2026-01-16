@@ -12,8 +12,10 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.util.Uuids
 import net.minecraft.util.math.BlockPos
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 @Serializable
 data class Shop(
@@ -25,27 +27,27 @@ data class Shop(
 	val price: Int
 ) {
 	constructor(nbt: NbtCompound) : this(
-		nbt.getUuid("id"),
-		nbt.getUuid("owner"),
-		nbt.getString("dimension"),
-		BlockPos.fromLong(nbt.getLong("position")),
-		ItemStack.fromNbt(nbt.getCompound("itemstack")),
-		nbt.getInt("price")
+		nbt.get("id", Uuids.CODEC).get(),
+		nbt.get("owner", Uuids.CODEC).get(),
+		nbt.getString("dimension").get(),
+		nbt.get("position", BlockPos.CODEC).get(),
+		nbt.get("itemstack", ItemStack.OPTIONAL_CODEC).get(),
+		nbt.getInt("price").get()
 	)
 
 	fun writeNbt(nbt: NbtCompound): NbtCompound = nbt.apply {
-		putUuid("id", id)
-		putUuid("owner", owner)
+		put("id", Uuids.CODEC, id)
+		put("owner", Uuids.CODEC, owner)
 		putString("dimension", dimension)
 		putLong("position", position.asLong())
-		put("itemstack", itemStack.writeNbt(NbtCompound()))
+		put("itemstack", ItemStack.OPTIONAL_CODEC, itemStack)
 		putInt("price", price)
 	}
 
 	fun toDto(): ShopDto = ShopDto(
 		id = id,
 		ownerUuid = owner,
-		ownerName = Util.getUsername(owner),
+		ownerName = Util.getUsername(owner).getOrNull(),
 		dimension = dimension,
 		position = position.toDto(),
 		itemStack = itemStack.toDto(),

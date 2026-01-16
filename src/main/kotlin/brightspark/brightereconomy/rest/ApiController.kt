@@ -54,6 +54,20 @@ object ApiController {
 					AccountService.setBalance(uuid, money, username)
 					call.respond(HttpStatusCode.OK)
 				}
+
+				put("/lock") {
+					val uuid: UUID by call.parameters
+					val shouldLock: Boolean = call.receive()
+					val username: String = call.principal<UserIdPrincipal>()!!.name
+					AccountService.setLock(uuid, shouldLock, username)
+					call.respond(HttpStatusCode.OK)
+				}
+
+				get("/shops") {
+					val uuid: UUID by call.parameters
+					val itemId: String? = call.queryParameters.getOptional("itemId", null)
+					call.respond(ShopService.getShopsForPlayer(uuid, itemId))
+				}
 			}
 		}
 
@@ -80,6 +94,6 @@ object ApiController {
 		}
 	}
 
-	private inline fun <reified R : Any?> Parameters.getOptional(name: String, default: R): R =
+	private inline fun <reified R> Parameters.getOptional(name: String, default: R): R =
 		(if (name in this) this.getOrFail(name) else default) as R
 }

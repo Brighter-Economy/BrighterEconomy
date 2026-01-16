@@ -1,17 +1,21 @@
 package brightspark.brightereconomy.rest
 
 import brightspark.brightereconomy.BrighterEconomy
+import brightspark.brightereconomy.persistance.database.AuthPasswordsDb
+import brightspark.brightereconomy.rest.dto.UserAuthInfoDto
+import brightspark.brightereconomy.util.Util
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.engine.*
-import io.ktor.server.http.content.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import net.fabricmc.loader.api.FabricLoader
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 object RestController {
 	private var engine: Optional<NettyApplicationEngine> = Optional.empty()
@@ -38,9 +42,7 @@ object RestController {
 				basic("basic") {
 					realm = "Brighter Economy Dashboard"
 					validate { credentials ->
-						if (credentials.name == BrighterEconomy.CONFIG.loginUsername()
-							&& credentials.password == BrighterEconomy.CONFIG.loginPassword()
-						)
+						if (AuthPasswordsDb.checkPassword(credentials.name, credentials.password))
 							UserIdPrincipal(credentials.name)
 						else
 							null
@@ -50,24 +52,23 @@ object RestController {
 
 			routing {
 				authenticate("basic") {
-					route("/api", ApiController::routes)
-				}
-
-				authenticate("basic", optional = true) {
-					get("/api/user-info") {
-						call.respondText(call.principal<UserIdPrincipal>()?.name.toString())
+					get("/user-info") {
+						val name = call.principal<UserIdPrincipal>()!!.name
+						val playerUuid = Util.getUuid(name).getOrNull() ?: run {
+							call.respond(HttpStatusCode.NotFound, "Player does not exist")
+							return@get
+						}
+						call.respond(UserAuthInfoDto(name, playerUuid))
+					}
+					route("/api") {
+						ApiController.routes(this)
 					}
 				}
 
-				singlePageApplication {
-					react("web")
-					useResources = true
-					defaultPage = "index.html"
-				}
-				staticFiles("/resources", BrighterEconomy.SERVER_RESOURCES_DIR_FILE)
+				WebController.routes(this)
 
 				if (FabricLoader.getInstance().isDevelopmentEnvironment) {
-					SwaggerSupport.swaggerRoutes(this)
+					SwaggerController.routes(this)
 				}
 			}
 		}.start().engine

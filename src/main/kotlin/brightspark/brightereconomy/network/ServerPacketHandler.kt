@@ -10,7 +10,7 @@ object ServerPacketHandler {
 	fun onItemDataPacket(packet: ItemDataPacket): Unit = Util.getIoWorkerExecutor().execute {
 		LocalisedNameStorage.getStorage().apply {
 			packet.data.forEach {
-				val itemId = Identifier(it.itemId)
+				val itemId = Identifier.of(it.itemId)
 				val imagePath = BrighterEconomy.SERVER_RESOURCES_DIR_PATH
 					.resolve("${itemId.namespace}_${itemId.path}.png")
 				NativeImage.read(it.imageBytes).run {

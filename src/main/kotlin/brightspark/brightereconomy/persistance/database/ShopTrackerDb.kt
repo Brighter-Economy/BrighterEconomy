@@ -16,7 +16,7 @@ object ShopTrackerDb : ShopTrackerStorage {
 		transaction {
 			ShopEntity.new(be.shopId) {
 				owner = be.owner
-				dimension = be.world!!.dimensionKey.value.toString()
+				dimension = be.world!!.dimensionEntry.idAsString
 				position = be.pos
 				itemStack = be.stack
 				price = be.cost

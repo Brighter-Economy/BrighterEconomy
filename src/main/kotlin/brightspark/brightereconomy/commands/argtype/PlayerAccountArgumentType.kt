@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture
 
 class PlayerAccountArgumentType : ArgumentType<PlayerAccountArgument> {
 	companion object {
-		val ID = Identifier.of(BrighterEconomy.MOD_ID, "player_account")
+		val ID: Identifier = Identifier.of(BrighterEconomy.MOD_ID, "player_account")
 
 		fun playerAccountArg() = PlayerAccountArgumentType()
 
@@ -38,7 +38,7 @@ class PlayerAccountArgumentType : ArgumentType<PlayerAccountArgument> {
 		}
 	}
 
-	override fun <S : Any?> listSuggestions(
+	override fun <S> listSuggestions(
 		context: CommandContext<S>,
 		builder: SuggestionsBuilder
 	): CompletableFuture<Suggestions> = ArgUtil.listGameProfileSuggestions(context, builder)

@@ -73,7 +73,7 @@ class ShopCustomerScreenHandler(
 
 		val simulatedExchangeResult = EconomyService.simulateExchange(playerUuid, ownerUuid, cost)
 		if (simulatedExchangeResult != TransactionExchangeResult.SUCCESS) {
-			player.sendMessage(failureMessageText(itemAmount, cost, simulatedExchangeResult.text))
+			player.sendMessage(failureMessageText(itemAmount, cost, simulatedExchangeResult.text), false)
 		}
 
 		val exchangeResult = EconomyService.purchase(
@@ -82,12 +82,12 @@ class ShopCustomerScreenHandler(
 			ownerUuid,
 			cost,
 			forSaleStack.get().copyWithCount(itemAmount),
-			player.entityName
+			player.nameForScoreboard
 		)
 		when (exchangeResult) {
 			TransactionExchangeResult.SUCCESS -> handlePurchaseSuccess(player, itemAmount, cost)
 			// This shouldn't happen as should be caught in pre-purchase checks, but just in-case
-			else -> player.sendMessage(failureMessageText(itemAmount, cost, exchangeResult.text))
+			else -> player.sendMessage(failureMessageText(itemAmount, cost, exchangeResult.text), false)
 		}
 	}
 
@@ -100,7 +100,8 @@ class ShopCustomerScreenHandler(
 					itemAmount,
 					cost,
 					Text.translatable("text.brightereconomy.player_shop.purchase.failure.no_items")
-				)
+				),
+				false
 			)
 			return
 		}
@@ -112,16 +113,13 @@ class ShopCustomerScreenHandler(
 				itemAmount.toString(),
 				forSaleStack.get().name,
 				Util.formatMoney(cost),
-				Util.getUsername(ownerUuid) ?: "<unknown>"
-			).styled { it.withItalic(true) }
+				Util.getUsername(ownerUuid).orElse("<unknown>")
+			).styled { it.withItalic(true) },
+			false
 		)
 
 		// Give to player
-		stacksToGive.forEach {
-			player.giveItemStack(it)
-			if (!it.isEmpty)
-				player.dropStack(it)
-		}
+		stacksToGive.forEach { player.giveOrDropStack(it) }
 	}
 
 	private fun failureMessageText(itemAmount: Int, cost: Long, failureReason: Text): Text = Util.messageTextSecondary(
@@ -129,7 +127,7 @@ class ShopCustomerScreenHandler(
 		itemAmount.toString(),
 		forSaleStack.get().name,
 		Util.formatMoney(cost),
-		Util.getUsername(ownerUuid) ?: "<unknown>",
+		Util.getUsername(ownerUuid).orElse("<unknown>"),
 		failureReason
 	).styled { it.withItalic(true) }
 }

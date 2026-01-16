@@ -7,6 +7,9 @@ import io.wispforest.owo.config.annotation.*
 @Config(name = BrighterEconomy.MOD_ID, wrapperName = "ModConfig")
 @Modmenu(modId = BrighterEconomy.MOD_ID)
 class ModConfigModel {
+
+	// ==== SERVER API ====
+
 	@SectionHeader("server_api")
 	@JvmField
 	@RestartRequired
@@ -19,11 +22,9 @@ class ModConfigModel {
 
 	@JvmField
 	@ExcludeFromScreen
-	var loginUsername: String = "admin"
+	var adminUsernames: List<String> = listOf()
 
-	@JvmField
-	@ExcludeFromScreen
-	var loginPassword: String = "admin"
+	// ==== ECONOMY ====
 
 	@SectionHeader("economy")
 	@JvmField
@@ -38,6 +39,8 @@ class ModConfigModel {
 	@RangeConstraint(min = -1.0, max = Int.MAX_VALUE.toDouble())
 	var baseDailyTransferLimit: Int = -1
 
+	// ==== MISC ====
+
 	@SectionHeader("misc")
 	@JvmField
 	@RestartRequired
@@ -48,6 +51,7 @@ class ModConfigModel {
 
 	// ==== DB CONFIG ====
 
+	@SectionHeader("db")
 	@JvmField
 	@ExcludeFromScreen
 	@RestartRequired

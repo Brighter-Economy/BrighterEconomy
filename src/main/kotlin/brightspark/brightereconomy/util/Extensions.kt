@@ -14,8 +14,9 @@ fun PlayerEntity.sendLiteralOverlayMessage(message: String, format: Formatting? 
 
 fun PlayerInventory.getSpaceFor(stack: ItemStack): Int {
 	var count = 0
-	for (slot in 0 until this.main.size) {
-		val invStack = this.main[slot]
+	val main = this.mainStacks
+	for (slot in 0 until main.size) {
+		val invStack = main[slot]
 		if (invStack.isEmpty)
 			count += stack.maxCount
 		else if (ItemStack.areItemsEqual(invStack, stack))

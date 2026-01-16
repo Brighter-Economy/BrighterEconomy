@@ -4,7 +4,9 @@ import brightspark.brightereconomy.rest.dto.TransactionDto
 import brightspark.brightereconomy.util.toDto
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.util.Uuids
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 data class Transaction(
 	val id: UUID = UUID.randomUUID(),
@@ -46,34 +48,38 @@ data class Transaction(
 		)
 
 		fun deserialize(nbt: NbtCompound): Transaction {
-			val id = nbt.getUuid("id")
-			val type = TransactionType.entries[nbt.getByte("type").toInt()]
-			val shopId = if (type == TransactionType.PURCHASE) nbt.getUuid("shopId") else null
-			val participants = TransactionParticipants.entries[nbt.getByte("participants").toInt()]
+			val id = nbt.get("id", Uuids.CODEC).get()
+			val type = TransactionType.entries[nbt.getByte("type").map(Byte::toInt).get()]
+			val shopId = if (type == TransactionType.PURCHASE) nbt.get("shopId", Uuids.CODEC).getOrNull() else null
+			val participants = TransactionParticipants.entries[nbt.getByte("participants").map(Byte::toInt).get()]
 			return Transaction(
 				id = id,
 				type = type,
 				shopId = shopId,
 				participants = participants,
-				uuidFrom = if (participants.hasFrom) nbt.getUuid("uuidFrom") else null,
-				uuidTo = if (participants.hasTo) nbt.getUuid("uuidTo") else null,
-				money = nbt.getLong("money"),
-				itemPurchased = if (nbt.getBoolean("hasItemPurchased")) ItemStack.fromNbt(nbt.getCompound("itemPurchased")) else null,
-				timestamp = nbt.getLong("timestamp")
+				uuidFrom = if (participants.hasFrom) nbt.get("uuidFrom", Uuids.CODEC).getOrNull() else null,
+				uuidTo = if (participants.hasTo) nbt.get("uuidTo", Uuids.CODEC).getOrNull() else null,
+				money = nbt.getLong("money").get(),
+				itemPurchased =
+					if (nbt.getBoolean("hasItemPurchased").get())
+						nbt.get("itemPurchased", ItemStack.OPTIONAL_CODEC).getOrNull()
+					else
+						null,
+				timestamp = nbt.getLong("timestamp").get()
 			)
 		}
 	}
 
 	fun writeNbt(nbt: NbtCompound): NbtCompound = nbt.apply {
-		putUuid("id", id)
+		put("id", Uuids.CODEC, id)
 		putByte("type", this@Transaction.type.ordinal.toByte())
-		shopId?.let { putUuid("shopId", it) }
+		shopId?.let { put("shopId", Uuids.CODEC, it) }
 		putByte("participants", this@Transaction.participants.ordinal.toByte())
-		uuidFrom?.let { putUuid("uuidFrom", it) }
-		uuidTo?.let { putUuid("uuidTo", it) }
+		uuidFrom?.let { put("uuidFrom", Uuids.CODEC, it) }
+		uuidTo?.let { put("uuidTo", Uuids.CODEC, it) }
 		putLong("money", money)
 		putBoolean("hasItemPurchased", itemPurchased != null)
-		itemPurchased?.let { put("itemPurchased", it.writeNbt(NbtCompound())) }
+		itemPurchased?.let { put("itemPurchased", ItemStack.OPTIONAL_CODEC, it) }
 		putLong("timestamp", timestamp)
 	}
 

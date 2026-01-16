@@ -6,26 +6,30 @@ import brightspark.brightereconomy.util.sendLiteralOverlayMessage
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.HopperBlockEntity
-import net.minecraft.client.item.TooltipContext
+import net.minecraft.component.type.TooltipDisplayComponent
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
 import net.minecraft.item.ItemUsageContext
-import net.minecraft.nbt.NbtLong
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import java.util.function.Consumer
 
-class ShopBlockItem(block: Block, settings: Settings) : BlockItem(block, settings) {
+class ShopBlockItem(block: Block, settings: Settings) :
+	BlockItem(block, settings.component(BrighterEconomy.TARGET_POS_COMPONENT_TYPE, BlockPos.ORIGIN)) {
 	companion object {
-		private const val NBT_CONTAINER = "container"
-
 		private fun getContainerPos(stack: ItemStack): BlockPos? =
-			stack.nbt?.getLong(NBT_CONTAINER)?.let { BlockPos.fromLong(it) }
+			stack.getOrDefault(BrighterEconomy.TARGET_POS_COMPONENT_TYPE, BlockPos.ORIGIN)
+
+		private fun setContainerPos(stack: ItemStack, pos: BlockPos) {
+			stack.set(BrighterEconomy.TARGET_POS_COMPONENT_TYPE, pos)
+		}
 	}
 
 	override fun canPlace(context: ItemPlacementContext, state: BlockState): Boolean {
@@ -54,7 +58,7 @@ class ShopBlockItem(block: Block, settings: Settings) : BlockItem(block, setting
 			val inventory = HopperBlockEntity.getInventoryAt(context.world, pos)
 			if (inventory == null || inventory is Entity) return ActionResult.FAIL
 
-			context.stack.setSubNbt(NBT_CONTAINER, NbtLong.of(pos.asLong()))
+			setContainerPos(context.stack, pos)
 			context.player!!.sendLiteralOverlayMessage("Shop container set to ${pos.toShortString()}")
 			return ActionResult.SUCCESS
 		}
@@ -73,17 +77,24 @@ class ShopBlockItem(block: Block, settings: Settings) : BlockItem(block, setting
 		val result = super.postPlacement(pos, world, player, stack, state)
 
 		world.getBlockEntity(pos, BrighterEconomy.SHOP_BLOCK_ENTITY).ifPresent { be ->
-			stack.nbt?.getLong(NBT_CONTAINER)?.let { be.setLinkedContainer(BlockPos.fromLong(it)) }
+			getContainerPos(stack)?.let { be.setLinkedContainer(it) }
 		}
 
 		return result
 	}
 
-	override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
-		super.appendTooltip(stack, world, tooltip, context)
-		val containerPos = stack.nbt?.getLong(NBT_CONTAINER)
-			?.let { BlockPos.fromLong(it).toShortString() }
-			?: "<none>"
-		tooltip.add(Text.literal("Linked Container: $containerPos").styled { it.withColor(Formatting.DARK_GRAY) })
+
+	override fun appendTooltip(
+		stack: ItemStack,
+		context: TooltipContext,
+		displayComponent: TooltipDisplayComponent,
+		textConsumer: Consumer<Text>,
+		type: TooltipType
+	) {
+		super.appendTooltip(stack, context, displayComponent, textConsumer, type)
+		val containerPos = getContainerPos(stack)?.toShortString() ?: "<none>"
+		textConsumer.accept(
+			Text.literal("Linked Container: $containerPos").styled { it.withColor(Formatting.DARK_GRAY) }
+		)
 	}
 }

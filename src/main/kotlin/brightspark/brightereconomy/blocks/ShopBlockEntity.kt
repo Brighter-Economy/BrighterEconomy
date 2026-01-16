@@ -12,10 +12,14 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SingleStackInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.NamedScreenHandlerFactory
 import net.minecraft.screen.ScreenHandler
+import net.minecraft.storage.ReadView
+import net.minecraft.storage.WriteView
 import net.minecraft.text.Text
 import net.minecraft.util.Util
+import net.minecraft.util.Uuids
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import java.util.*
@@ -120,7 +124,7 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 
 	override fun getDisplayName(): Text = Text.translatable(cachedState.block.translationKey)
 
-	override fun getStack(slot: Int): ItemStack = if (slot == 0) itemStackForSale else ItemStack.EMPTY
+	override fun getStack(): ItemStack = itemStackForSale
 
 	override fun removeStack(slot: Int, amount: Int): ItemStack =
 		if (slot == 0) {
@@ -133,8 +137,7 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 			ItemStack.EMPTY
 		}
 
-	override fun setStack(slot: Int, stack: ItemStack) {
-		if (slot != 0) return
+	override fun setStack(stack: ItemStack) {
 		itemStackForSale = stack
 		ShopTrackerService.updateShop(shopId) { it.copy(itemStack = stack) }
 		markDirty()
@@ -142,21 +145,23 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 
 	override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
 
-	override fun readNbt(nbt: NbtCompound) {
-		super.readNbt(nbt)
-		shopId = nbt.getUuid("shopId")
-		owner = nbt.getUuid("owner")
-		cost = nbt.getInt("cost")
-		itemStackForSale = ItemStack.fromNbt(nbt.getCompound("stackForSale"))
-		linkedContainer = BlockPos.fromLong(nbt.getLong("container"))
+	override fun readData(view: ReadView) {
+		super.readData(view)
+		shopId = view.read("shopId", Uuids.CODEC).get()
+		owner = view.read("owner", Uuids.CODEC).orElse(Util.NIL_UUID)
+		cost = view.getInt("cost", 0)
+		itemStackForSale = view.read("stackForSale", ItemStack.OPTIONAL_CODEC).orElse(ItemStack.EMPTY)
+		linkedContainer = view.read("container", BlockPos.CODEC).orElse(BlockPos.ORIGIN)
 	}
 
-	override fun writeNbt(nbt: NbtCompound) {
-		super.writeNbt(nbt)
-		nbt.putUuid("shopId", shopId)
-		nbt.putUuid("owner", owner)
-		nbt.putInt("cost", cost)
-		nbt.put("stackForSale", itemStackForSale.writeNbt(NbtCompound()))
-		nbt.putLong("container", linkedContainer.asLong())
+	override fun writeData(view: WriteView) {
+		view.put("shopId", Uuids.CODEC, shopId)
+		view.put("owner", Uuids.CODEC, owner)
+		view.putInt("cost", cost)
+		view.put("stackForSale", ItemStack.OPTIONAL_CODEC, itemStackForSale)
+		view.put("container", BlockPos.CODEC, linkedContainer)
+		super.writeData(view)
 	}
+
+	override fun toInitialChunkDataNbt(registries: RegistryWrapper.WrapperLookup): NbtCompound? = createNbt(registries)
 }
