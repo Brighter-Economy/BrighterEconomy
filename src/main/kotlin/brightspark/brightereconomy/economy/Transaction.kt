@@ -1,7 +1,9 @@
 package brightspark.brightereconomy.economy
 
 import brightspark.brightereconomy.rest.dto.TransactionDto
+import brightspark.brightereconomy.util.getItemStack
 import brightspark.brightereconomy.util.toDto
+import brightspark.brightereconomy.util.toNbt
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import java.util.*
@@ -58,7 +60,7 @@ data class Transaction(
 				uuidFrom = if (participants.hasFrom) nbt.getUuid("uuidFrom") else null,
 				uuidTo = if (participants.hasTo) nbt.getUuid("uuidTo") else null,
 				money = nbt.getLong("money"),
-				itemPurchased = if (nbt.getBoolean("hasItemPurchased")) ItemStack.fromNbt(nbt.getCompound("itemPurchased")) else null,
+				itemPurchased = if (nbt.getBoolean("hasItemPurchased")) nbt.getItemStack("itemPurchased") else null,
 				timestamp = nbt.getLong("timestamp")
 			)
 		}
@@ -73,7 +75,7 @@ data class Transaction(
 		uuidTo?.let { putUuid("uuidTo", it) }
 		putLong("money", money)
 		putBoolean("hasItemPurchased", itemPurchased != null)
-		itemPurchased?.let { put("itemPurchased", it.writeNbt(NbtCompound())) }
+		itemPurchased?.let { put("itemPurchased", it.toNbt()) }
 		putLong("timestamp", timestamp)
 	}
 

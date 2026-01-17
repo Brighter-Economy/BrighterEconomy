@@ -7,7 +7,9 @@ import brightspark.brightereconomy.rest.serializer.BlockPosSerializer
 import brightspark.brightereconomy.rest.serializer.ItemStackSerializer
 import brightspark.brightereconomy.rest.serializer.UuidSerializer
 import brightspark.brightereconomy.util.Util
+import brightspark.brightereconomy.util.getItemStack
 import brightspark.brightereconomy.util.toDto
+import brightspark.brightereconomy.util.toNbt
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import net.minecraft.item.ItemStack
@@ -29,7 +31,7 @@ data class Shop(
 		nbt.getUuid("owner"),
 		nbt.getString("dimension"),
 		BlockPos.fromLong(nbt.getLong("position")),
-		ItemStack.fromNbt(nbt.getCompound("itemstack")),
+		nbt.getItemStack("itemstack"),
 		nbt.getInt("price")
 	)
 
@@ -38,7 +40,7 @@ data class Shop(
 		putUuid("owner", owner)
 		putString("dimension", dimension)
 		putLong("position", position.asLong())
-		put("itemstack", itemStack.writeNbt(NbtCompound()))
+		put("itemstack", itemStack.toNbt())
 		putInt("price", price)
 	}
 

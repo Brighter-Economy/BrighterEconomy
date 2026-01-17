@@ -3,6 +3,7 @@ package brightspark.brightereconomy.blocks
 import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.shops.ShopTrackerService
 import brightspark.brightereconomy.util.sendLiteralOverlayMessage
+import com.mojang.serialization.MapCodec
 import net.minecraft.block.Block
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
@@ -33,7 +34,7 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 		state: BlockState?,
 		type: BlockEntityType<T>?
 	): BlockEntityTicker<T>? =
-		checkType(type, BrighterEconomy.SHOP_BLOCK_ENTITY) { w, p, s, be -> be.tick(w) }
+		validateTicker(type, BrighterEconomy.SHOP_BLOCK_ENTITY) { w, _, _, be -> be.tick(w) }
 
 	override fun onPlaced(
 		world: World,
@@ -51,7 +52,7 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 				{
 					BrighterEconomy.LOG.atError()
 						.setMessage("Can't get shop block entity when added at {} {}")
-						.addArgument(world.dimensionKey.value).addArgument(pos)
+						.addArgument(world.dimensionEntry.idAsString).addArgument(pos)
 						.log()
 				}
 			)
@@ -72,7 +73,7 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 				{
 					BrighterEconomy.LOG.atError()
 						.setMessage("Can't get shop block entity when removed at {} {}")
-						.addArgument(world.dimensionKey.value).addArgument(pos)
+						.addArgument(world.dimensionEntry.idAsString).addArgument(pos)
 						.log()
 				}
 			)
@@ -85,7 +86,6 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 		world: World,
 		pos: BlockPos,
 		player: PlayerEntity,
-		hand: Hand,
 		hit: BlockHitResult
 	): ActionResult {
 		if (!world.isClient()) {
@@ -101,6 +101,8 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 		}
 		return ActionResult.SUCCESS
 	}
+
+	override fun getCodec(): MapCodec<out BlockWithEntity?> = createCodec(::ShopBlock)
 
 	override fun getRenderType(state: BlockState?): BlockRenderType = BlockRenderType.MODEL
 

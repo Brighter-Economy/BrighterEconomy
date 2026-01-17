@@ -5,23 +5,20 @@ import brightspark.brightereconomy.blocks.ShopBlockEntity
 import brightspark.brightereconomy.commands.BaseCommand
 import brightspark.brightereconomy.commands.argtype.PlayerAccountArgumentType
 import brightspark.brightereconomy.commands.argtype.PlayerProfileArgumentType
-import brightspark.brightereconomy.economy.PlayerAccount
 import brightspark.brightereconomy.items.ShopBlockItem
-import brightspark.brightereconomy.network.ItemDataPacket
 import brightspark.brightereconomy.network.EnchantmentNamesPacket
+import brightspark.brightereconomy.network.ItemDataPacket
 import brightspark.brightereconomy.network.ServerPacket
 import brightspark.brightereconomy.persistance.database.DbConnection
 import brightspark.brightereconomy.rest.RestController
 import brightspark.brightereconomy.screen.ShopCustomerScreenHandler
 import brightspark.brightereconomy.screen.ShopOwnerScreenHandler
 import io.wispforest.owo.network.OwoNetChannel
-import io.wispforest.owo.network.serialization.PacketBufSerializer
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
-import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
@@ -29,6 +26,7 @@ import net.minecraft.block.Blocks
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.command.argument.serialize.ConstantArgumentSerializer
+import net.minecraft.component.ComponentType
 import net.minecraft.item.BlockItem
 import net.minecraft.item.Item
 import net.minecraft.item.Item.Settings
@@ -41,6 +39,7 @@ import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.server.MinecraftServer
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockPos
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -59,6 +58,7 @@ object BrighterEconomy : ModInitializer {
 	var SERVER: Optional<MinecraftServer> = Optional.empty()
 		private set
 
+	lateinit var TARGET_POS_COMPONENT_TYPE: ComponentType<BlockPos>
 	lateinit var PLAYER_SHOP_BLOCK: ShopBlock
 	lateinit var SERVER_SHOP_BLOCK: ShopBlock
 	lateinit var SHOP_BLOCK_ENTITY: BlockEntityType<ShopBlockEntity>
@@ -93,6 +93,10 @@ object BrighterEconomy : ModInitializer {
 			ConstantArgumentSerializer.of(::PlayerProfileArgumentType)
 		)
 		CommandRegistrationCallback.EVENT.register { dispatcher, _, _ -> BaseCommand.register(dispatcher) }
+
+		// Data Components
+		TARGET_POS_COMPONENT_TYPE =
+			regDataComponent("target_pos", ComponentType.builder<BlockPos>().codec(BlockPos.CODEC).build())
 
 		// Blocks
 		val shopBlockSettings = AbstractBlock.Settings.create().nonOpaque().allowsSpawning(Blocks::never)
@@ -133,7 +137,7 @@ object BrighterEconomy : ModInitializer {
 		// Network
 		regServerPacket<ItemDataPacket>()
 		regServerPacket<EnchantmentNamesPacket>()
-		PacketBufSerializer.register(PlayerAccount::class.java, PlayerAccount.SERIALIZER)
+//		PacketBufSerializer.register(PlayerAccount::class.java, PlayerAccount.SERIALIZER)
 	}
 
 	private fun validateConfig() {
@@ -144,7 +148,10 @@ object BrighterEconomy : ModInitializer {
 		NETWORK.registerServerbound<T>(T::class.java) { message, access -> message.handle(access) }
 	}
 
-	private fun id(name: String): Identifier = Identifier.of(MOD_ID, name)!!
+	fun id(name: String): Identifier = Identifier.of(MOD_ID, name)!!
+
+	private fun <T> regDataComponent(name: String, componentType: ComponentType<T>): ComponentType<T> =
+		Registry.register(Registries.DATA_COMPONENT_TYPE, id(name), componentType)
 
 	private fun <T : Block> regBlock(name: String, block: T): T =
 		Registry.register(Registries.BLOCK, id(name), block)
@@ -152,12 +159,12 @@ object BrighterEconomy : ModInitializer {
 	@Suppress("SameParameterValue")
 	private fun <T : BlockEntity> regBlockEntity(
 		name: String,
-		factory: FabricBlockEntityTypeBuilder.Factory<T>,
+		factory: BlockEntityType.BlockEntityFactory<T>,
 		vararg blocks: Block
 	): BlockEntityType<T> = Registry.register(
 		Registries.BLOCK_ENTITY_TYPE,
 		id(name),
-		FabricBlockEntityTypeBuilder.create(factory, *blocks).build()
+		BlockEntityType.Builder.create(factory, *blocks).build()
 	)
 
 	private fun <T : Item> regItem(name: String, item: T): T =

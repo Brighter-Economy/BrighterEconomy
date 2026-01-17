@@ -82,7 +82,7 @@ class ShopCustomerScreenHandler(
 			ownerUuid,
 			cost,
 			forSaleStack.get().copyWithCount(itemAmount),
-			player.entityName
+			player.nameForScoreboard
 		)
 		when (exchangeResult) {
 			TransactionExchangeResult.SUCCESS -> handlePurchaseSuccess(player, itemAmount, cost)

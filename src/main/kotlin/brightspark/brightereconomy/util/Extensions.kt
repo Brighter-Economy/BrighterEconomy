@@ -5,6 +5,9 @@ import io.wispforest.owo.client.screens.SyncedProperty
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.ItemStack
+import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtElement
+import net.minecraft.nbt.NbtOps
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import kotlin.reflect.KMutableProperty1
@@ -23,6 +26,14 @@ fun PlayerInventory.getSpaceFor(stack: ItemStack): Int {
 	}
 	return count
 }
+
+fun NbtCompound.getItemStack(key: String): ItemStack =
+	ItemStack.OPTIONAL_CODEC.decode(NbtOps.INSTANCE, this.getCompound(key))
+		.resultOrPartial().map { it.first }.orElse(ItemStack.EMPTY)
+
+fun ItemStack.toNbt(): NbtElement =
+	ItemStack.OPTIONAL_CODEC.encode(this, NbtOps.INSTANCE, NbtCompound())
+		.resultOrPartial().orElse(NbtCompound())
 
 inline fun <reified V> OwoScreenHandler.property(value: V): SyncedProperty<V> =
 	createProperty(V::class.java, value).apply { markDirty() }

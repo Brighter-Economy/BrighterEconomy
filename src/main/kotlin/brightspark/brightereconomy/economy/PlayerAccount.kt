@@ -5,7 +5,6 @@ package brightspark.brightereconomy.economy
 import brightspark.brightereconomy.rest.dto.PlayerAccountDto
 import brightspark.brightereconomy.rest.serializer.UuidSerializer
 import brightspark.brightereconomy.util.Util
-import io.wispforest.owo.network.serialization.PacketBufSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import net.minecraft.nbt.NbtCompound
@@ -18,12 +17,12 @@ data class PlayerAccount(
 	val locked: Boolean = false,
 	val money: Long = 0
 ) {
-	companion object {
-		val SERIALIZER = PacketBufSerializer(
-			{ buf, account -> account.writeBuf(buf) },
-			{ buf -> PlayerAccount(buf) }
-		)
-	}
+//	companion object {
+//		val SERIALIZER = PacketBufSerializer(
+//			{ buf, account -> account.writeBuf(buf) },
+//			{ buf -> PlayerAccount(buf) }
+//		)
+//	}
 
 	val remainingTransferLimit: Int?
 		get() = EconomyService.getRemainingTransferLimit(this)

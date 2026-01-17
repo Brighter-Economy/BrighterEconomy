@@ -49,7 +49,7 @@ class ItemImageGeneratorScreen : Screen(Text.literal("")) {
 			sendToServer()
 	}
 
-	override fun renderBackground(context: DrawContext) = Unit
+	override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) = Unit
 
 	override fun close() {
 		sendToServer()
@@ -63,7 +63,6 @@ class ItemImageGeneratorScreen : Screen(Text.literal("")) {
 	private fun createItemImage(context: DrawContext, item: Item): NativeImage {
 		val scaledSize = IMAGE_SIZE / client!!.window.scaleFactor
 		val scaledSizeInt = ceil(scaledSize).toInt()
-		@Suppress("UnstableApiUsage")
 		context.apply {
 			fill(0, 0, scaledSizeInt, scaledSizeInt, BG_COLOUR)
 			push()
