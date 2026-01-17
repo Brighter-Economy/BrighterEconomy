@@ -10,12 +10,7 @@ jobs:
   build:
     strategy:
       matrix:
-        # Use these Java versions
-        java: [
-          17,    # Current Java LTS & minimum supported by Minecraft
-          21,    # Current Java LTS
-        ]
-        # and run on both Linux and Windows
+        # run on both Linux and Windows
         os: [ubuntu-22.04, windows-2022]
     runs-on: ${{ matrix.os }}
     steps:
@@ -23,16 +18,16 @@ jobs:
         uses: actions/checkout@v4
       - name: validate gradle wrapper
         uses: gradle/wrapper-validation-action@v1
-      - name: setup jdk ${{ matrix.java }}
+      - name: setup jdk 21
         uses: actions/setup-java@v4
         with:
-          java-version: ${{ matrix.java }}
+          java-version: 21
           distribution: 'microsoft'
       - name: make gradle wrapper executable
-        if: ${{ runner.os != 'Windows' }}
+        if: ${{ runner.os == 'Linux'' }}
         run: chmod +x ./gradlew
       - name: download webapp
-        if: ${{ runner.os == 'Linux' && matrix.java == '21' }}
+        if: ${{ runner.os == 'Linux' }}
         uses: dawidd6/action-download-artifact@v11
         with:
           github_token: ${{ secrets.DOWNLOAD_ACTION_TOKEN }}
@@ -46,7 +41,7 @@ jobs:
       - name: build
         run: ./gradlew build
       - name: capture build artifacts
-        if: ${{ runner.os == 'Linux' && matrix.java == '21' }} # Only upload artifacts built from latest java on one OS
+        if: ${{ runner.os == 'Linux' }}
         uses: actions/upload-artifact@v4
         with:
           name: jar
