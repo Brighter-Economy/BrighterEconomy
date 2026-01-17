@@ -24,7 +24,7 @@ jobs:
           java-version: 21
           distribution: 'microsoft'
       - name: make gradle wrapper executable
-        if: ${{ runner.os == 'Linux'' }}
+        if: ${{ runner.os == 'Linux' }}
         run: chmod +x ./gradlew
       - name: download webapp
         if: ${{ runner.os == 'Linux' }}
