@@ -44,7 +44,6 @@ class ShopOwnerScreenHandler(
 				when (actionType) {
 					SlotActionType.PICKUP -> slot.stack = heldStack.copy()
 					SlotActionType.QUICK_MOVE -> slot.stack = ItemStack.EMPTY
-					else -> Unit
 				}
 			}
 			slot.markDirty()
