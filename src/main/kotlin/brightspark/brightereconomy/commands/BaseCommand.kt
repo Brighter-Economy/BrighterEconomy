@@ -2,7 +2,7 @@ package brightspark.brightereconomy.commands
 
 import brightspark.brightereconomy.BrighterEconomy
 import com.mojang.brigadier.CommandDispatcher
-import net.minecraft.server.command.ServerCommandSource
+import net.minecraft.commands.CommandSourceStack
 
 object BaseCommand : Command(BrighterEconomy.MOD_ID, {
 	requiresPermission(PermissionLevel.ALL)
@@ -21,7 +21,7 @@ object BaseCommand : Command(BrighterEconomy.MOD_ID, {
 			.forEach { alias(it) }
 	}
 
-	fun register(dispatcher: CommandDispatcher<ServerCommandSource>) {
+	fun register(dispatcher: CommandDispatcher<CommandSourceStack>) {
 		val command = builder.build()
 		dispatcher.root.apply {
 			addChild(command)

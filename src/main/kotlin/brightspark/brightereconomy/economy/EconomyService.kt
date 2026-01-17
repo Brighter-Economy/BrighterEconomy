@@ -3,7 +3,7 @@ package brightspark.brightereconomy.economy
 import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.economy.TransactionExchangeResult.*
 import brightspark.brightereconomy.persistance.EconomyStorage
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZonedDateTime

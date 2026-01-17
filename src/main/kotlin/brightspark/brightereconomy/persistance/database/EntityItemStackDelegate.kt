@@ -1,6 +1,6 @@
 package brightspark.brightereconomy.persistance.database
 
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty

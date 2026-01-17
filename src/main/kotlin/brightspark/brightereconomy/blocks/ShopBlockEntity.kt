@@ -4,25 +4,25 @@ import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.screen.ShopCustomerScreenHandler
 import brightspark.brightereconomy.screen.ShopOwnerScreenHandler
 import brightspark.brightereconomy.shops.ShopTrackerService
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SingleStackInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.registry.RegistryWrapper
-import net.minecraft.screen.NamedScreenHandlerFactory
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.text.Text
-import net.minecraft.util.Util
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Inventory
+import net.minecraft.world.Container
+import net.minecraft.world.ticks.ContainerSingleItem
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.core.HolderLookup
+import net.minecraft.world.MenuProvider
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.network.chat.Component
+import net.minecraft.Util
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 import java.util.*
 
 class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEconomy.SHOP_BLOCK_ENTITY, pos, state),
-	NamedScreenHandlerFactory, SingleStackInventory {
+	MenuProvider, ContainerSingleItem {
 
 	var shopId: UUID = UUID.randomUUID()
 		private set
@@ -32,10 +32,10 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 		private set
 	private var itemStackForSale: ItemStack = ItemStack.EMPTY
 
-	var linkedContainer: BlockPos = BlockPos.ORIGIN
+	var linkedContainer: BlockPos = BlockPos.ZERO
 		private set
-	private val linkedInventory: Inventory?
-		get() = if (linkedContainer != BlockPos.ORIGIN) world!!.getBlockEntity(linkedContainer) as Inventory else null
+	private val linkedInventory: Container?
+		get() = if (linkedContainer != BlockPos.ZERO) level!!.getBlockEntity(linkedContainer) as Container else null
 
 	private val listeners: MutableSet<ShopCustomerScreenHandler> = mutableSetOf()
 	private var cachedStock: Int = 0
@@ -52,14 +52,14 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 		listeners.forEach(function)
 	}
 
-	fun tick(world: World) {
-		if ((world.time + 6).mod(20) != 0 || listeners.isEmpty()) return
+	fun tick(world: Level) {
+		if ((world.gameTime + 6).mod(20) != 0 || listeners.isEmpty()) return
 
 		// Check if there's been any changes to the linked container's inventory
 		linkedInventory?.let { inv ->
-			val stock = (0 until inv.size()).asSequence()
-				.map { inv.getStack(it) }
-				.filter { ItemStack.areItemsEqual(it, itemStackForSale) }
+			val stock = (0 until inv.containerSize).asSequence()
+				.map { inv.getItem(it) }
+				.filter { ItemStack.isSameItem(it, itemStackForSale) }
 				.sumOf { it.count }
 			if (cachedStock != stock) {
 				cachedStock = stock
@@ -70,18 +70,18 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 
 	fun setOwner(ownerUuid: UUID) {
 		owner = ownerUuid
-		markDirty()
+		setChanged()
 	}
 
-	fun getStockAmount(): Int = linkedInventory?.count(itemStackForSale.item) ?: 0
+	fun getStockAmount(): Int = linkedInventory?.countItem(itemStackForSale.item) ?: 0
 
 	fun removeStock(amount: Int): List<ItemStack> {
 		val inv = linkedInventory ?: return emptyList()
 		val stacks = mutableListOf<ItemStack>()
 		var amountLeftNeeded = amount
-		for (i in (0..<inv.size()).reversed()) {
-			val stack = inv.getStack(i)
-			if (ItemStack.areItemsEqual(stack, itemStackForSale)) {
+		for (i in (0..<inv.containerSize).reversed()) {
+			val stack = inv.getItem(i)
+			if (ItemStack.isSameItem(stack, itemStackForSale)) {
 				val stackCount = stack.count
 				when {
 					stackCount < amountLeftNeeded -> {
@@ -105,58 +105,58 @@ class ShopBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(BrighterEc
 	fun setCost(cost: Int) {
 		this.cost = cost
 		ShopTrackerService.updateShop(shopId) { it.copy(price = cost) }
-		markDirty()
+		setChanged()
 	}
 
 	fun setLinkedContainer(pos: BlockPos) {
 		linkedContainer = pos
-		markDirty()
+		setChanged()
 	}
 
-	override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): ScreenHandler =
+	override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): AbstractContainerMenu =
 		if (player.uuid == owner)
 			ShopOwnerScreenHandler(syncId, playerInventory, this)
 		else
 			ShopCustomerScreenHandler(syncId, playerInventory, this)
 
-	override fun getDisplayName(): Text = Text.translatable(cachedState.block.translationKey)
+	override fun getDisplayName(): Component = Component.translatable(blockState.block.descriptionId)
 
-	override fun getStack(): ItemStack = itemStackForSale
+	override fun getTheItem(): ItemStack = itemStackForSale
 
-	override fun setStack(stack: ItemStack) {
+	override fun setTheItem(stack: ItemStack) {
 		itemStackForSale = stack
 		ShopTrackerService.updateShop(shopId) { it.copy(itemStack = stack) }
-		markDirty()
+		setChanged()
 	}
 
-	override fun removeStack(slot: Int, amount: Int): ItemStack =
+	override fun removeItem(slot: Int, amount: Int): ItemStack =
 		if (slot == 0) {
-			itemStackForSale.decrement(amount)
+			itemStackForSale.shrink(amount)
 			if (itemStackForSale.isEmpty)
 				itemStackForSale = ItemStack.EMPTY
-			markDirty()
+			setChanged()
 			itemStackForSale
 		} else {
 			ItemStack.EMPTY
 		}
 
-	override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+	override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-	override fun readNbt(nbt: NbtCompound, registryLookup: RegistryWrapper.WrapperLookup) {
-		super.readNbt(nbt, registryLookup)
-		shopId = nbt.getUuid("shopId")
-		owner = nbt.getUuid("owner")
+	override fun loadAdditional(nbt: CompoundTag, registryLookup: HolderLookup.Provider) {
+		super.loadAdditional(nbt, registryLookup)
+		shopId = nbt.getUUID("shopId")
+		owner = nbt.getUUID("owner")
 		cost = nbt.getInt("cost")
-		itemStackForSale = ItemStack.fromNbt(registryLookup, nbt.getCompound("stackForSale")).orElse(ItemStack.EMPTY)
-		linkedContainer = BlockPos.fromLong(nbt.getLong("container"))
+		itemStackForSale = ItemStack.parse(registryLookup, nbt.getCompound("stackForSale")).orElse(ItemStack.EMPTY)
+		linkedContainer = BlockPos.of(nbt.getLong("container"))
 	}
 
-	override fun writeNbt(nbt: NbtCompound, registryLookup: RegistryWrapper.WrapperLookup) {
-		super.writeNbt(nbt, registryLookup)
-		nbt.putUuid("shopId", shopId)
-		nbt.putUuid("owner", owner)
+	override fun saveAdditional(nbt: CompoundTag, registryLookup: HolderLookup.Provider) {
+		super.saveAdditional(nbt, registryLookup)
+		nbt.putUUID("shopId", shopId)
+		nbt.putUUID("owner", owner)
 		nbt.putInt("cost", cost)
-		nbt.put("stackForSale", itemStackForSale.encode(registryLookup, NbtCompound()))
+		nbt.put("stackForSale", itemStackForSale.save(registryLookup, CompoundTag()))
 		nbt.putLong("container", linkedContainer.asLong())
 	}
 }

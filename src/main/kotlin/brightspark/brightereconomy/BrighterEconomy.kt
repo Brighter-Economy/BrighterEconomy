@@ -20,26 +20,26 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.block.AbstractBlock
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.command.argument.serialize.ConstantArgumentSerializer
-import net.minecraft.component.ComponentType
-import net.minecraft.item.BlockItem
-import net.minecraft.item.Item
-import net.minecraft.item.Item.Settings
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.registry.Registry
-import net.minecraft.resource.featuretoggle.FeatureFlags
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerType
+import net.minecraft.world.level.block.state.BlockBehaviour
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.commands.synchronization.SingletonArgumentInfo
+import net.minecraft.core.component.DataComponentType
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Item.Properties
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.Registry
+import net.minecraft.world.flag.FeatureFlags
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.MenuType
 import net.minecraft.server.MinecraftServer
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.core.BlockPos
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -58,12 +58,12 @@ object BrighterEconomy : ModInitializer {
 	var SERVER: Optional<MinecraftServer> = Optional.empty()
 		private set
 
-	lateinit var TARGET_POS_COMPONENT_TYPE: ComponentType<BlockPos>
+	lateinit var TARGET_POS_COMPONENT_TYPE: DataComponentType<BlockPos>
 	lateinit var PLAYER_SHOP_BLOCK: ShopBlock
 	lateinit var SERVER_SHOP_BLOCK: ShopBlock
 	lateinit var SHOP_BLOCK_ENTITY: BlockEntityType<ShopBlockEntity>
-	lateinit var SHOP_OWNER_SCREEN_HANDLER: ScreenHandlerType<ShopOwnerScreenHandler>
-	lateinit var SHOP_CUSTOMER_SCREEN_HANDLER: ScreenHandlerType<ShopCustomerScreenHandler>
+	lateinit var SHOP_OWNER_SCREEN_HANDLER: MenuType<ShopOwnerScreenHandler>
+	lateinit var SHOP_CUSTOMER_SCREEN_HANDLER: MenuType<ShopCustomerScreenHandler>
 
 	val TIME_ZONE_ID: ZoneId
 		get() = ZoneId.of(CONFIG.timeZoneId())
@@ -85,28 +85,28 @@ object BrighterEconomy : ModInitializer {
 		ArgumentTypeRegistry.registerArgumentType(
 			PlayerAccountArgumentType.ID,
 			PlayerAccountArgumentType::class.java,
-			ConstantArgumentSerializer.of(::PlayerAccountArgumentType)
+			SingletonArgumentInfo.contextFree(::PlayerAccountArgumentType)
 		)
 		ArgumentTypeRegistry.registerArgumentType(
 			PlayerProfileArgumentType.ID,
 			PlayerProfileArgumentType::class.java,
-			ConstantArgumentSerializer.of(::PlayerProfileArgumentType)
+			SingletonArgumentInfo.contextFree(::PlayerProfileArgumentType)
 		)
 		CommandRegistrationCallback.EVENT.register { dispatcher, _, _ -> BaseCommand.register(dispatcher) }
 
 		// Data Components
 		TARGET_POS_COMPONENT_TYPE =
-			regDataComponent("target_pos", ComponentType.builder<BlockPos>().codec(BlockPos.CODEC).build())
+			regDataComponent("target_pos", DataComponentType.builder<BlockPos>().persistent(BlockPos.CODEC).build())
 
 		// Blocks
-		val shopBlockSettings = AbstractBlock.Settings.create().nonOpaque().allowsSpawning(Blocks::never)
+		val shopBlockSettings = BlockBehaviour.Properties.of().noOcclusion().isValidSpawn(Blocks::never)
 		PLAYER_SHOP_BLOCK = regBlock(
 			"player_shop",
 			ShopBlock(shopBlockSettings.strength(5.0F, 6.0F))
 		)
 		SERVER_SHOP_BLOCK = regBlock(
 			"server_shop",
-			ShopBlock(shopBlockSettings.strength(-1.0F, 3600000.0F).dropsNothing())
+			ShopBlock(shopBlockSettings.strength(-1.0F, 3600000.0F).noLootTable())
 		)
 		SHOP_BLOCK_ENTITY = regBlockEntity("shop", ::ShopBlockEntity, PLAYER_SHOP_BLOCK, SERVER_SHOP_BLOCK)
 
@@ -116,15 +116,15 @@ object BrighterEconomy : ModInitializer {
 
 		// Item Group
 		Registry.register(
-			Registries.ITEM_GROUP,
+			BuiltInRegistries.CREATIVE_MODE_TAB,
 			id("group"),
 			FabricItemGroup.builder()
 				.icon { ItemStack(PLAYER_SHOP_BLOCK) }
-				.displayName(Text.translatable("itemGroup.brightereconomy.group"))
-				.entries { _, entries ->
+				.title(Component.translatable("itemGroup.brightereconomy.group"))
+				.displayItems { _, entries ->
 					entries.apply {
-						add(playerShopBlockItem)
-						add(serverShopBlockItem)
+						accept(playerShopBlockItem)
+						accept(serverShopBlockItem)
 					}
 				}
 				.build()
@@ -148,40 +148,40 @@ object BrighterEconomy : ModInitializer {
 		NETWORK.registerServerbound<T>(T::class.java) { message, access -> message.handle(access) }
 	}
 
-	fun id(name: String): Identifier = Identifier.of(MOD_ID, name)!!
+	fun id(name: String): ResourceLocation = ResourceLocation.fromNamespaceAndPath(MOD_ID, name)!!
 
-	private fun <T> regDataComponent(name: String, componentType: ComponentType<T>): ComponentType<T> =
-		Registry.register(Registries.DATA_COMPONENT_TYPE, id(name), componentType)
+	private fun <T> regDataComponent(name: String, componentType: DataComponentType<T>): DataComponentType<T> =
+		Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE, id(name), componentType)
 
 	private fun <T : Block> regBlock(name: String, block: T): T =
-		Registry.register(Registries.BLOCK, id(name), block)
+		Registry.register(BuiltInRegistries.BLOCK, id(name), block)
 
 	@Suppress("SameParameterValue")
 	private fun <T : BlockEntity> regBlockEntity(
 		name: String,
-		factory: BlockEntityType.BlockEntityFactory<T>,
+		factory: BlockEntityType.BlockEntitySupplier<T>,
 		vararg blocks: Block
 	): BlockEntityType<T> = Registry.register(
-		Registries.BLOCK_ENTITY_TYPE,
+		BuiltInRegistries.BLOCK_ENTITY_TYPE,
 		id(name),
-		BlockEntityType.Builder.create(factory, *blocks).build()
+		BlockEntityType.Builder.of(factory, *blocks).build()
 	)
 
 	private fun <T : Item> regItem(name: String, item: T): T =
-		Registry.register(Registries.ITEM, id(name), item)
+		Registry.register(BuiltInRegistries.ITEM, id(name), item)
 
 	private fun regBlockItem(
 		name: String,
 		block: Block,
-		blockItem: (Block, Settings) -> BlockItem = ::BlockItem
-	): BlockItem = regItem(name, blockItem(block, Settings()))
+		blockItem: (Block, Properties) -> BlockItem = ::BlockItem
+	): BlockItem = regItem(name, blockItem(block, Properties()))
 
-	private fun <T : ScreenHandler> regScreenHandler(
+	private fun <T : AbstractContainerMenu> regScreenHandler(
 		name: String,
-		factory: ScreenHandlerType.Factory<T>
-	): ScreenHandlerType<T> = Registry.register(
-		Registries.SCREEN_HANDLER,
+		factory: MenuType.MenuSupplier<T>
+	): MenuType<T> = Registry.register(
+		BuiltInRegistries.MENU,
 		id(name),
-		ScreenHandlerType(factory, FeatureFlags.VANILLA_FEATURES)
+		MenuType(factory, FeatureFlags.VANILLA_SET)
 	)
 }

@@ -2,7 +2,7 @@ package brightspark.brightereconomy.persistance.database.table
 
 import brightspark.brightereconomy.persistance.database.itemStackWrapper
 import brightspark.brightereconomy.shops.Shop
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
@@ -15,7 +15,7 @@ object ShopTable : IdTable<UUID>("Shop") {
 	val owner = uuid("owner")
 	val dimension = text("dimension")
 	val position = long("position").transform(
-		wrap = BlockPos::fromLong,
+		wrap = BlockPos::of,
 		unwrap = BlockPos::asLong
 	)
 	val itemStackId = text("itemStackId")

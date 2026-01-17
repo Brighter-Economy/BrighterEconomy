@@ -12,8 +12,8 @@ interface EconomyStorage {
 		override fun getStorage(): EconomyStorage = EconomyDb
 
 		fun onPlayerAccountUpdated(account: PlayerAccount) = BrighterEconomy.SERVER.ifPresent { server ->
-			server.playerManager.playerList.asSequence()
-				.map { it.currentScreenHandler }
+			server.playerList.players.asSequence()
+				.map { it.containerMenu }
 				.filter { it is PlayerAccountListener }
 				.forEach { (it as PlayerAccountListener).handlePlayerAccountUpdate(account) }
 		}

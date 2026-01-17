@@ -6,8 +6,8 @@ import brightspark.brightereconomy.commands.argtype.PlayerProfileAndAccount
 import brightspark.brightereconomy.economy.EconomyService
 import brightspark.brightereconomy.util.Util
 import com.mojang.brigadier.context.CommandContext
-import net.minecraft.server.command.ServerCommandSource
-import net.minecraft.text.Text
+import net.minecraft.commands.CommandSourceStack
+import net.minecraft.network.chat.Component
 
 object AccountCommand : Command("account", {
 	requiresPermission("account", PermissionLevel.ALL)
@@ -28,9 +28,9 @@ object AccountCommand : Command("account", {
 	private const val KEY_LOCKED = "text.brightereconomy.command.account.details.locked"
 	private const val KEY_LIMIT = "text.brightereconomy.command.account.details.limit"
 
-	private fun account(ctx: CommandContext<ServerCommandSource>, player: PlayerProfileAndAccount? = null): Int {
+	private fun account(ctx: CommandContext<CommandSourceStack>, player: PlayerProfileAndAccount? = null): Int {
 		fun errorNonPlayer(): Int {
-			ctx.source.sendError(Text.of("Cannot get account of non-player"))
+			ctx.source.sendFailure(Component.nullToEmpty("Cannot get account of non-player"))
 			return 0
 		}
 
@@ -67,7 +67,7 @@ object AccountCommand : Command("account", {
 				)
 			)
 		}
-		ctx.source.sendMessage(message)
+		ctx.source.sendSystemMessage(message)
 		return 1
 	}
 }

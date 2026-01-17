@@ -4,46 +4,49 @@ import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.shops.ShopTrackerService
 import brightspark.brightereconomy.util.sendLiteralOverlayMessage
 import com.mojang.serialization.MapCodec
-import net.minecraft.block.Block
-import net.minecraft.block.BlockRenderType
-import net.minecraft.block.BlockState
-import net.minecraft.block.BlockWithEntity
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemPlacementContext
-import net.minecraft.item.ItemStack
-import net.minecraft.state.StateManager
-import net.minecraft.state.property.Properties
-import net.minecraft.util.*
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.ChatFormatting
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.RenderShape
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.BaseEntityBlock
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.block.state.StateDefinition
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.Mirror
+import net.minecraft.world.level.block.Rotation
 
-class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
+class ShopBlock(settings: Properties) : BaseEntityBlock(settings) {
 	companion object {
-		private val FACING = Properties.HORIZONTAL_FACING
+		private val FACING = BlockStateProperties.HORIZONTAL_FACING
 	}
 
-	override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = ShopBlockEntity(pos, state)
+	override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = ShopBlockEntity(pos, state)
 
-	override fun <T : BlockEntity?> getTicker(
-		world: World?,
+	override fun <T : BlockEntity> getTicker(
+		world: Level?,
 		state: BlockState?,
-		type: BlockEntityType<T>?
+		type: BlockEntityType<T>
 	): BlockEntityTicker<T>? =
-		validateTicker(type, BrighterEconomy.SHOP_BLOCK_ENTITY) { w, _, _, be -> be.tick(w) }
+		createTickerHelper(type, BrighterEconomy.SHOP_BLOCK_ENTITY) { w, _, _, be -> be.tick(w) }
 
-	override fun onPlaced(
-		world: World,
+	override fun setPlacedBy(
+		world: Level,
 		pos: BlockPos,
 		state: BlockState,
 		placer: LivingEntity?,
 		itemStack: ItemStack
 	) {
-		if (!world.isClient) {
+		if (!world.isClientSide) {
 			world.getBlockEntity(pos, BrighterEconomy.SHOP_BLOCK_ENTITY).ifPresentOrElse(
 				{ be ->
 					placer?.uuid?.let { be.setOwner(it) }
@@ -52,70 +55,70 @@ class ShopBlock(settings: Settings) : BlockWithEntity(settings) {
 				{
 					BrighterEconomy.LOG.atError()
 						.setMessage("Can't get shop block entity when added at {} {}")
-						.addArgument(world.dimensionEntry.idAsString).addArgument(pos)
+						.addArgument(world.dimensionTypeRegistration().registeredName).addArgument(pos)
 						.log()
 				}
 			)
 		}
-		super.onPlaced(world, pos, state, placer, itemStack)
+		super.setPlacedBy(world, pos, state, placer, itemStack)
 	}
 
-	override fun onStateReplaced(
+	override fun onRemove(
 		state: BlockState,
-		world: World,
+		world: Level,
 		pos: BlockPos,
 		newState: BlockState,
 		moved: Boolean
 	) {
-		if (!state.isOf(newState.block)) {
+		if (!state.`is`(newState.block)) {
 			world.getBlockEntity(pos, BrighterEconomy.SHOP_BLOCK_ENTITY).ifPresentOrElse(
 				{ ShopTrackerService.removeShop(it) },
 				{
 					BrighterEconomy.LOG.atError()
 						.setMessage("Can't get shop block entity when removed at {} {}")
-						.addArgument(world.dimensionEntry.idAsString).addArgument(pos)
+						.addArgument(world.dimensionTypeRegistration().registeredName).addArgument(pos)
 						.log()
 				}
 			)
 		}
-		super.onStateReplaced(state, world, pos, newState, moved)
+		super.onRemove(state, world, pos, newState, moved)
 	}
 
-	override fun onUse(
+	override fun useWithoutItem(
 		state: BlockState,
-		world: World,
+		world: Level,
 		pos: BlockPos,
-		player: PlayerEntity,
+		player: Player,
 		hit: BlockHitResult
-	): ActionResult {
-		if (!world.isClient()) {
+	): InteractionResult {
+		if (!world.isClientSide) {
 			world.getBlockEntity(pos)
 				?.takeIf { it is ShopBlockEntity }
 				?.let { it as ShopBlockEntity }
 				?.let { be ->
-					if (be.linkedContainer == BlockPos.ORIGIN)
-						player.sendLiteralOverlayMessage("No container linked!", Formatting.RED)
+					if (be.linkedContainer == BlockPos.ZERO)
+						player.sendLiteralOverlayMessage("No container linked!", ChatFormatting.RED)
 					else
-						player.openHandledScreen(state.createScreenHandlerFactory(world, pos))
+						player.openMenu(state.getMenuProvider(world, pos))
 				}
 		}
-		return ActionResult.SUCCESS
+		return InteractionResult.SUCCESS
 	}
 
-	override fun getCodec(): MapCodec<out BlockWithEntity?> = createCodec(::ShopBlock)
+	override fun codec(): MapCodec<out BaseEntityBlock?> = simpleCodec(::ShopBlock)
 
-	override fun getRenderType(state: BlockState?): BlockRenderType = BlockRenderType.MODEL
+	override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
 
-	override fun rotate(state: BlockState, rotation: BlockRotation): BlockState =
-		state.with(FACING, rotation.rotate(state.get(FACING)))
+	override fun rotate(state: BlockState, rotation: Rotation): BlockState =
+		state.setValue(FACING, rotation.rotate(state.getValue(FACING)))
 
-	override fun mirror(state: BlockState, mirror: BlockMirror): BlockState =
-		state.rotate(mirror.getRotation(state.get(FACING)))
+	override fun mirror(state: BlockState, mirror: Mirror): BlockState =
+		state.rotate(mirror.getRotation(state.getValue(FACING)))
 
-	override fun getPlacementState(ctx: ItemPlacementContext): BlockState =
-		defaultState.with(FACING, ctx.horizontalPlayerFacing.opposite)
+	override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState =
+		defaultBlockState().setValue(FACING, ctx.horizontalDirection.opposite)
 
-	override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+	override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
 		builder.add(FACING)
 	}
 }

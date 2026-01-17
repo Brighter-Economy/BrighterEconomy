@@ -1,6 +1,6 @@
 package brightspark.brightereconomy.economy
 
-import net.minecraft.text.Text
+import net.minecraft.network.chat.Component
 
 enum class TransactionExchangeResult(val langKey: String) {
 	SUCCESS("brightereconomy.transaction.result.success"),
@@ -10,6 +10,6 @@ enum class TransactionExchangeResult(val langKey: String) {
 	TO_LOCKED("brightereconomy.transaction.result.to_locked"),
 	OVER_DAILY_LIMIT("brightereconomy.transaction.result.over_daily_limit");
 
-	val text: Text
-		get() = Text.translatable(langKey)
+	val text: Component
+		get() = Component.translatable(langKey)
 }

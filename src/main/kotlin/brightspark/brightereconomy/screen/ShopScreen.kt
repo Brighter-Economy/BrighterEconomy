@@ -5,11 +5,11 @@ import io.wispforest.owo.ui.base.BaseOwoHandledScreen
 import io.wispforest.owo.ui.container.Containers
 import io.wispforest.owo.ui.container.FlowLayout
 import io.wispforest.owo.ui.core.*
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.text.Text
+import net.minecraft.world.entity.player.Inventory
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.network.chat.Component
 
-abstract class ShopScreen<H : ScreenHandler>(handler: H, playerInv: PlayerInventory, title: Text) :
+abstract class ShopScreen<H : AbstractContainerMenu>(handler: H, playerInv: Inventory, title: Component) :
 	BaseOwoHandledScreen<FlowLayout, H>(handler, playerInv, title) {
 	override fun createAdapter(): OwoUIAdapter<FlowLayout> = OwoUIAdapter.create(this, Containers::verticalFlow)
 

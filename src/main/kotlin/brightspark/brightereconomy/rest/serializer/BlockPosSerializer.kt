@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 object BlockPosSerializer : KSerializer<BlockPos> {
 	override val descriptor: SerialDescriptor = BlockPosSurrogate.serializer().descriptor

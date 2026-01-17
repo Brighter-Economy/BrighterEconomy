@@ -2,19 +2,19 @@ package brightspark.brightereconomy.network
 
 import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.persistance.LocalisedNameStorage
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.util.Identifier
-import net.minecraft.util.Util
+import com.mojang.blaze3d.platform.NativeImage
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.Util
 
 object ServerPacketHandler {
-	fun onItemDataPacket(packet: ItemDataPacket): Unit = Util.getIoWorkerExecutor().execute {
+	fun onItemDataPacket(packet: ItemDataPacket): Unit = Util.ioPool().execute {
 		LocalisedNameStorage.getStorage().apply {
 			packet.data.forEach {
-				val itemId = Identifier.of(it.itemId)
+				val itemId = ResourceLocation.parse(it.itemId)
 				val imagePath = BrighterEconomy.SERVER_RESOURCES_DIR_PATH
 					.resolve("${itemId.namespace}_${itemId.path}.png")
 				NativeImage.read(it.imageBytes).run {
-					writeTo(imagePath)
+					writeToFile(imagePath)
 					close()
 				}
 

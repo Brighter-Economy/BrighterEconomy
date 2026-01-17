@@ -1,6 +1,6 @@
 package brightspark.brightereconomy.network.screen;
 
 import brightspark.brightereconomy.economy.PlayerAccount;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 public record CustomerScreenDataPacket(PlayerAccount account, ItemStack stack, int cost, int stock) {}

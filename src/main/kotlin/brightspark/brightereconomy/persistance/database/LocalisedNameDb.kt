@@ -3,11 +3,11 @@ package brightspark.brightereconomy.persistance.database
 import brightspark.brightereconomy.persistance.LocalisedNameStorage
 import brightspark.brightereconomy.persistance.database.table.EnchantmentNameEntity
 import brightspark.brightereconomy.persistance.database.table.ItemNameEntity
-import net.minecraft.util.Identifier
+import net.minecraft.resources.ResourceLocation
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object LocalisedNameDb : LocalisedNameStorage {
-	override fun getItemName(id: Identifier): String? = transaction {
+	override fun getItemName(id: ResourceLocation): String? = transaction {
 		ItemNameEntity.findById(id.toString())?.name
 	}
 
@@ -19,7 +19,7 @@ object LocalisedNameDb : LocalisedNameStorage {
 		}
 	}
 
-	override fun getEnchantmentName(id: Identifier): String? = transaction {
+	override fun getEnchantmentName(id: ResourceLocation): String? = transaction {
 		EnchantmentNameEntity.findById(id.toString())?.name
 	}
 

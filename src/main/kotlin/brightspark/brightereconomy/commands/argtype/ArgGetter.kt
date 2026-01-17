@@ -1,7 +1,7 @@
 package brightspark.brightereconomy.commands.argtype
 
-import net.minecraft.server.command.ServerCommandSource
+import net.minecraft.commands.CommandSourceStack
 
 fun interface ArgGetter<T> {
-	fun get(source: ServerCommandSource): T
+	fun get(source: CommandSourceStack): T
 }

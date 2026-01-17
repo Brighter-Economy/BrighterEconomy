@@ -9,13 +9,13 @@ import io.wispforest.owo.ui.core.HorizontalAlignment
 import io.wispforest.owo.ui.core.Insets
 import io.wispforest.owo.ui.core.Sizing
 import io.wispforest.owo.ui.core.VerticalAlignment
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
+import net.minecraft.world.entity.player.Inventory
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.chat.Component
 import kotlin.math.min
 
-class ShopCustomerScreen(handler: ShopCustomerScreenHandler, playerInv: PlayerInventory, title: Text) :
-	ShopScreen<ShopCustomerScreenHandler>(handler, playerInv, Text.empty()) {
+class ShopCustomerScreen(handler: ShopCustomerScreenHandler, playerInv: Inventory, title: Component) :
+	ShopScreen<ShopCustomerScreenHandler>(handler, playerInv, Component.empty()) {
 
 	override fun topHalf(parent: FlowLayout): Unit =
 		parent.horizontalFlow(horizontalSizing = Sizing.fixed(18 * 9)) {
@@ -25,22 +25,22 @@ class ShopCustomerScreen(handler: ShopCustomerScreenHandler, playerInv: PlayerIn
 				verticalAlignment(VerticalAlignment.CENTER)
 				horizontalAlignment(HorizontalAlignment.CENTER)
 
-				label(Text.of("For Sale:"))
+				label(Component.nullToEmpty("For Sale:"))
 
 				horizontalFlow {
 					verticalAlignment(VerticalAlignment.CENTER)
 					horizontalAlignment(HorizontalAlignment.CENTER)
 
-					item(handler.forSaleStack) {
+					item(menu.forSaleStack) {
 						setTooltipFromStack(true)
 					}
-					label(handler.forSaleStack, { Text.of("x ${it.count}") }) {
+					label(menu.forSaleStack, { Component.nullToEmpty("x ${it.count}") }) {
 						margins(Insets.left(5))
 					}
 				}
 
-				label(handler.cost, { Text.of("Cost: ${BrighterEconomy.CONFIG.currencySymbol()}$it") })
-				label(handler.stock, { Text.of("Stock: $it") })
+				label(menu.cost, { Component.nullToEmpty("Cost: ${BrighterEconomy.CONFIG.currencySymbol()}$it") })
+				label(menu.stock, { Component.nullToEmpty("Stock: $it") })
 			}
 
 			verticalFlow(horizontalSizing = Sizing.fixed(82)) {
@@ -49,43 +49,43 @@ class ShopCustomerScreen(handler: ShopCustomerScreenHandler, playerInv: PlayerIn
 
 				fun ButtonComponent.updateTooltip(num: Int, account: PlayerAccount) {
 					tooltip(
-						"Buying: ${num * handler.forSaleStack.get().count}",
-						"Cost: ${Util.formatMoney(num * handler.cost.get().toLong())}",
+						"Buying: ${num * menu.forSaleStack.get().count}",
+						"Cost: ${Util.formatMoney(num * menu.cost.get().toLong())}",
 						"Your Balance: ${Util.formatMoney(account.money)}"
 					)
 				}
 
 				fun FlowLayout.buyButton(text: String, num: Int, block: ButtonComponent.() -> Unit) =
-					this.button(Text.of(text), { buy(num) }, block)
+					this.button(Component.nullToEmpty(text), { buy(num) }, block)
 
 				fun FlowLayout.buyButton(text: String, numSupplier: () -> Int, block: ButtonComponent.() -> Unit) =
-					this.button(Text.of(text), { buy(numSupplier()) }, block)
+					this.button(Component.nullToEmpty(text), { buy(numSupplier()) }, block)
 
 				fun FlowLayout.buyButton(num: Int) = buyButton("Buy $num", num) {
 					sizing(Sizing.fixed(40), Sizing.fixed(12))
 					margins(Insets.of(1))
-					val numToBuy = { num * handler.forSaleStack.get().count }
+					val numToBuy = { num * menu.forSaleStack.get().count }
 					fun updateActive(stock: Int, numToBuy: Int, cost: Int, account: PlayerAccount) {
-						active = stock >= numToBuy && handler.playerCanBuy(numToBuy, cost, account)
+						active = stock >= numToBuy && menu.playerCanBuy(numToBuy, cost, account)
 					}
-					updateActive(handler.stock.get(), numToBuy(), handler.cost.get(), handler.playerAccount.get())
-					updateTooltip(num, handler.playerAccount.get())
+					updateActive(menu.stock.get(), numToBuy(), menu.cost.get(), menu.playerAccount.get())
+					updateTooltip(num, menu.playerAccount.get())
 
-					handler.forSaleStack.observe { updateTooltip(num, handler.playerAccount.get()) }
-					handler.stock.observe {
+					menu.forSaleStack.observe { updateTooltip(num, menu.playerAccount.get()) }
+					menu.stock.observe {
 						updateActive(
 							it,
 							numToBuy(),
-							handler.cost.get(),
-							handler.playerAccount.get()
+							menu.cost.get(),
+							menu.playerAccount.get()
 						)
 					}
-					handler.cost.observe {
-						updateActive(handler.stock.get(), numToBuy(), it, handler.playerAccount.get())
-						updateTooltip(num, handler.playerAccount.get())
+					menu.cost.observe {
+						updateActive(menu.stock.get(), numToBuy(), it, menu.playerAccount.get())
+						updateTooltip(num, menu.playerAccount.get())
 					}
-					handler.playerAccount.observe {
-						updateActive(handler.stock.get(), numToBuy(), handler.cost.get(), it)
+					menu.playerAccount.observe {
+						updateActive(menu.stock.get(), numToBuy(), menu.cost.get(), it)
 						updateTooltip(num, it)
 					}
 				}
@@ -116,36 +116,36 @@ class ShopCustomerScreen(handler: ShopCustomerScreenHandler, playerInv: PlayerIn
 				var max = 0
 				fun maxText(): String = "Buy Max ($max)"
 				fun updateMax(stock: Int, forSaleStack: ItemStack) {
-					max = min(stock, handler.playerInvSpace(forSaleStack))
+					max = min(stock, menu.playerInvSpace(forSaleStack))
 				}
-				updateMax(handler.stock.get(), handler.forSaleStack.get())
+				updateMax(menu.stock.get(), menu.forSaleStack.get())
 				buyButton(maxText(), { max }) {
 					sizing(Sizing.fixed(82), Sizing.fixed(12))
 					margins(Insets.of(1))
 					fun updateActive(cost: Int, account: PlayerAccount) {
-						active = max > 0 && handler.playerCanBuy(max, cost, account)
+						active = max > 0 && menu.playerCanBuy(max, cost, account)
 					}
-					updateActive(handler.cost.get(), handler.playerAccount.get())
-					updateTooltip(max, handler.playerAccount.get())
+					updateActive(menu.cost.get(), menu.playerAccount.get())
+					updateTooltip(max, menu.playerAccount.get())
 
-					handler.stock.observe {
-						updateMax(it, handler.forSaleStack.get())
-						updateActive(handler.cost.get(), handler.playerAccount.get())
-						updateTooltip(max, handler.playerAccount.get())
-						message = Text.of(maxText())
+					menu.stock.observe {
+						updateMax(it, menu.forSaleStack.get())
+						updateActive(menu.cost.get(), menu.playerAccount.get())
+						updateTooltip(max, menu.playerAccount.get())
+						message = Component.nullToEmpty(maxText())
 					}
-					handler.cost.observe {
-						updateActive(it, handler.playerAccount.get())
-						updateTooltip(max, handler.playerAccount.get())
+					menu.cost.observe {
+						updateActive(it, menu.playerAccount.get())
+						updateTooltip(max, menu.playerAccount.get())
 					}
-					handler.forSaleStack.observe { updateMax(handler.stock.get(), it) }
-					handler.playerAccount.observe {
-						updateActive(handler.cost.get(), it)
+					menu.forSaleStack.observe { updateMax(menu.stock.get(), it) }
+					menu.playerAccount.observe {
+						updateActive(menu.cost.get(), it)
 						updateTooltip(max, it)
 					}
 				}
 			}
 		}
 
-	private fun buy(num: Int) = handler.sendPurchase(num)
+	private fun buy(num: Int) = menu.sendPurchase(num)
 }

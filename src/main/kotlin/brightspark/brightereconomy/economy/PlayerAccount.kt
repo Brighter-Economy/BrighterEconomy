@@ -7,8 +7,8 @@ import brightspark.brightereconomy.rest.serializer.UuidSerializer
 import brightspark.brightereconomy.util.Util
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
 import java.util.*
 
 @Serializable
@@ -27,27 +27,27 @@ data class PlayerAccount(
 	val remainingTransferLimit: Int?
 		get() = EconomyService.getRemainingTransferLimit(this)
 
-	constructor(nbt: NbtCompound) : this(
-		nbt.getUuid("uuid"),
+	constructor(nbt: CompoundTag) : this(
+		nbt.getUUID("uuid"),
 		nbt.getBoolean("locked"),
 		nbt.getLong("money")
 	)
 
-	constructor(buf: PacketByteBuf) : this(
-		buf.readUuid(),
+	constructor(buf: FriendlyByteBuf) : this(
+		buf.readUUID(),
 		buf.readBoolean(),
 		buf.readLong()
 	)
 
-	fun writeNbt(nbt: NbtCompound): NbtCompound = nbt.apply {
-		putUuid("uuid", uuid)
+	fun writeNbt(nbt: CompoundTag): CompoundTag = nbt.apply {
+		putUUID("uuid", uuid)
 		putBoolean("locked", locked)
 		putLong("money", money)
 	}
 
-	fun writeBuf(buf: PacketByteBuf) {
+	fun writeBuf(buf: FriendlyByteBuf) {
 		buf.apply {
-			writeUuid(uuid)
+			writeUUID(uuid)
 			writeBoolean(locked)
 			writeLong(money)
 		}

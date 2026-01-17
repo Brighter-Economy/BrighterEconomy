@@ -12,9 +12,9 @@ import brightspark.brightereconomy.util.toDto
 import brightspark.brightereconomy.util.toNbt
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.core.BlockPos
 import java.util.*
 
 @Serializable
@@ -26,18 +26,18 @@ data class Shop(
 	val itemStack: ItemStack,
 	val price: Int
 ) {
-	constructor(nbt: NbtCompound) : this(
-		nbt.getUuid("id"),
-		nbt.getUuid("owner"),
+	constructor(nbt: CompoundTag) : this(
+		nbt.getUUID("id"),
+		nbt.getUUID("owner"),
 		nbt.getString("dimension"),
-		BlockPos.fromLong(nbt.getLong("position")),
+		BlockPos.of(nbt.getLong("position")),
 		nbt.getItemStack("itemstack"),
 		nbt.getInt("price")
 	)
 
-	fun writeNbt(nbt: NbtCompound): NbtCompound = nbt.apply {
-		putUuid("id", id)
-		putUuid("owner", owner)
+	fun writeNbt(nbt: CompoundTag): CompoundTag = nbt.apply {
+		putUUID("id", this@Shop.id)
+		putUUID("owner", owner)
 		putString("dimension", dimension)
 		putLong("position", position.asLong())
 		put("itemstack", itemStack.toNbt())

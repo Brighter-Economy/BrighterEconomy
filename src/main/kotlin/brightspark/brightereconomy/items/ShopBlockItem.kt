@@ -3,75 +3,75 @@ package brightspark.brightereconomy.items
 import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.blocks.ShopBlock
 import brightspark.brightereconomy.util.sendLiteralOverlayMessage
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.entity.HopperBlockEntity
-import net.minecraft.entity.Entity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.BlockItem
-import net.minecraft.item.ItemPlacementContext
-import net.minecraft.item.ItemStack
-import net.minecraft.item.ItemUsageContext
-import net.minecraft.item.tooltip.TooltipType
-import net.minecraft.text.Text
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Formatting
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.entity.HopperBlockEntity
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.context.UseOnContext
+import net.minecraft.world.item.TooltipFlag
+import net.minecraft.network.chat.Component
+import net.minecraft.world.InteractionResult
+import net.minecraft.ChatFormatting
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 
-class ShopBlockItem(block: Block, settings: Settings) : BlockItem(block, settings) {
+class ShopBlockItem(block: Block, settings: Properties) : BlockItem(block, settings) {
 	companion object {
 		private fun getContainerPos(stack: ItemStack): BlockPos =
-			stack.getOrDefault(BrighterEconomy.TARGET_POS_COMPONENT_TYPE, BlockPos.ORIGIN)
+			stack.getOrDefault(BrighterEconomy.TARGET_POS_COMPONENT_TYPE, BlockPos.ZERO)
 
 		private fun setContainerPos(stack: ItemStack, pos: BlockPos) {
 			stack.set(BrighterEconomy.TARGET_POS_COMPONENT_TYPE, pos)
 		}
 	}
 
-	override fun canPlace(context: ItemPlacementContext, state: BlockState): Boolean {
+	override fun canPlace(context: BlockPlaceContext, state: BlockState): Boolean {
 		// Check has linked container
-		val pos = getContainerPos(context.stack)
-		if (pos == BlockPos.ORIGIN) {
-			context.player?.sendLiteralOverlayMessage("No container linked!", Formatting.RED)
+		val pos = getContainerPos(context.itemInHand)
+		if (pos == BlockPos.ZERO) {
+			context.player?.sendLiteralOverlayMessage("No container linked!", ChatFormatting.RED)
 			return false
 		}
-		if (!context.blockPos.isWithinDistance(pos, 10.0)) {
-			context.player?.sendLiteralOverlayMessage("Container is too far away!", Formatting.RED)
+		if (!context.clickedPos.closerThan(pos, 10.0)) {
+			context.player?.sendLiteralOverlayMessage("Container is too far away!", ChatFormatting.RED)
 			return false
 		}
 		return super.canPlace(context, state)
 	}
 
-	override fun useOnBlock(context: ItemUsageContext): ActionResult {
-		if (context.player == null) return ActionResult.FAIL
+	override fun useOn(context: UseOnContext): InteractionResult {
+		if (context.player == null) return InteractionResult.FAIL
 
-		if (context.player!!.isSneaking) {
+		if (context.player!!.isShiftKeyDown) {
 			// Set linked container to NBT
-			val pos = context.blockPos
-			val block = context.world.getBlockState(pos).block
-			if (block is ShopBlock) return ActionResult.FAIL
+			val pos = context.clickedPos
+			val block = context.level.getBlockState(pos).block
+			if (block is ShopBlock) return InteractionResult.FAIL
 
-			val inventory = HopperBlockEntity.getInventoryAt(context.world, pos)
-			if (inventory == null || inventory is Entity) return ActionResult.FAIL
+			val inventory = HopperBlockEntity.getContainerAt(context.level, pos)
+			if (inventory == null || inventory is Entity) return InteractionResult.FAIL
 
-			setContainerPos(context.stack, pos)
+			setContainerPos(context.itemInHand, pos)
 			context.player!!.sendLiteralOverlayMessage("Shop container set to ${pos.toShortString()}")
-			return ActionResult.SUCCESS
+			return InteractionResult.SUCCESS
 		}
 
 		// The super logic will end up calling canPlace
-		return super.useOnBlock(context)
+		return super.useOn(context)
 	}
 
-	override fun postPlacement(
+	override fun updateCustomBlockEntityTag(
 		pos: BlockPos,
-		world: World,
-		player: PlayerEntity?,
+		world: Level,
+		player: Player?,
 		stack: ItemStack,
 		state: BlockState
 	): Boolean {
-		val result = super.postPlacement(pos, world, player, stack, state)
+		val result = super.updateCustomBlockEntityTag(pos, world, player, stack, state)
 
 		world.getBlockEntity(pos, BrighterEconomy.SHOP_BLOCK_ENTITY).ifPresent { be ->
 			be.setLinkedContainer(getContainerPos(stack))
@@ -80,14 +80,14 @@ class ShopBlockItem(block: Block, settings: Settings) : BlockItem(block, setting
 		return result
 	}
 
-	override fun appendTooltip(
+	override fun appendHoverText(
 		stack: ItemStack,
 		context: TooltipContext,
-		tooltip: MutableList<Text>,
-		type: TooltipType
+		tooltip: MutableList<Component>,
+		type: TooltipFlag
 	) {
-		super.appendTooltip(stack, context, tooltip, type)
-		val containerPos = getContainerPos(stack).let { if (it == BlockPos.ORIGIN) "<none>" else it.toShortString() }
-		tooltip.add(Text.literal("Linked Container: $containerPos").styled { it.withColor(Formatting.DARK_GRAY) })
+		super.appendHoverText(stack, context, tooltip, type)
+		val containerPos = getContainerPos(stack).let { if (it == BlockPos.ZERO) "<none>" else it.toShortString() }
+		tooltip.add(Component.literal("Linked Container: $containerPos").withStyle { it.withColor(ChatFormatting.DARK_GRAY) })
 	}
 }

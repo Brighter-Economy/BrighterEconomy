@@ -1,28 +1,28 @@
 package brightspark.brightereconomy.screen
 
 import brightspark.brightereconomy.blocks.ShopBlockEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerType
-import net.minecraft.screen.slot.Slot
-import net.minecraft.util.Util
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.player.Inventory
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.MenuType
+import net.minecraft.world.inventory.Slot
+import net.minecraft.Util
 import java.util.*
 
 @Suppress("LeakingThis")
 abstract class ShopScreenHandler(
-	type: ScreenHandlerType<*>,
+	type: MenuType<*>,
 	syncId: Int,
-	protected val playerInventory: PlayerInventory,
+	protected val playerInventory: Inventory,
 	shopBlockEntity: ShopBlockEntity?,
 	playerInvX: Int,
 	playerInvY: Int
-) : ScreenHandler(type, syncId) {
+) : AbstractContainerMenu(type, syncId) {
 	protected val ownerUuid: UUID = shopBlockEntity?.owner ?: Util.NIL_UUID
 
 	init {
-		playerInventory.onOpen(playerInventory.player)
+		playerInventory.startOpen(playerInventory.player)
 
 		for (y in 0..2) {
 			for (x in 0..8) {
@@ -34,7 +34,7 @@ abstract class ShopScreenHandler(
 		}
 	}
 
-	override fun canUse(player: PlayerEntity?): Boolean = true
+	override fun stillValid(player: Player): Boolean = true
 
-	override fun quickMove(player: PlayerEntity?, slot: Int): ItemStack = ItemStack.EMPTY
+	override fun quickMoveStack(player: Player, slot: Int): ItemStack = ItemStack.EMPTY
 }

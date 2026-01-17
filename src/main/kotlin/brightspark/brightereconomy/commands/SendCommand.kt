@@ -8,8 +8,8 @@ import brightspark.brightereconomy.util.Util
 import com.mojang.brigadier.arguments.LongArgumentType
 import com.mojang.brigadier.arguments.LongArgumentType.longArg
 import com.mojang.brigadier.context.CommandContext
-import net.minecraft.server.command.ServerCommandSource
-import net.minecraft.text.Text
+import net.minecraft.commands.CommandSourceStack
+import net.minecraft.network.chat.Component
 
 object SendCommand : Command("send", {
 	requiresPermission("send", PermissionLevel.ALL)
@@ -20,31 +20,31 @@ object SendCommand : Command("send", {
 		}
 	}
 }) {
-	private fun send(ctx: CommandContext<ServerCommandSource>): Int {
+	private fun send(ctx: CommandContext<CommandSourceStack>): Int {
 		val player = PlayerProfileArgumentType.get(ctx, "player")
 		val sourcePlayerId = ctx.source.player?.uuid
 		val amount = LongArgumentType.getLong(ctx, "amount")
-		val result = EconomyService.transfer(sourcePlayerId, player.id, amount, ctx.source.name)
+		val result = EconomyService.transfer(sourcePlayerId, player.id, amount, ctx.source.textName)
 		val formattedAmount = Util.formatMoney(amount)
 		when (result) {
 			TransactionExchangeResult.SUCCESS -> {
-				ctx.source.sendMessage(Text.of("Sent $formattedAmount to ${player.name}"))
-				ctx.getPlayer(player.id)?.sendMessage(Text.of("${ctx.source.name} has sent you $formattedAmount"))
+				ctx.source.sendSystemMessage(Component.nullToEmpty("Sent $formattedAmount to ${player.name}"))
+				ctx.getPlayer(player.id)?.sendSystemMessage(Component.nullToEmpty("${ctx.source.textName} has sent you $formattedAmount"))
 				return 1
 			}
 			TransactionExchangeResult.OVER_DAILY_LIMIT -> {
 				val remainingLimit = EconomyService.getRemainingTransferLimit(sourcePlayerId)
 					?.let { Util.formatMoney(it.toLong()) }
-				ctx.source.sendMessage(
-					Text.literal("Failed to send $formattedAmount to ${player.name} due to ")
+				ctx.source.sendSystemMessage(
+					Component.literal("Failed to send $formattedAmount to ${player.name} due to ")
 						.append(result.text)
-						.append(Text.literal(" (max $remainingLimit today)"))
+						.append(Component.literal(" (max $remainingLimit today)"))
 				)
 				return 0
 			}
 			else -> {
-				ctx.source.sendMessage(
-					Text.literal("Failed to send $formattedAmount to ${player.name} due to ")
+				ctx.source.sendSystemMessage(
+					Component.literal("Failed to send $formattedAmount to ${player.name} due to ")
 						.append(result.text)
 				)
 				return 0

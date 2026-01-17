@@ -5,11 +5,12 @@ import io.wispforest.owo.ui.component.*
 import io.wispforest.owo.ui.container.Containers
 import io.wispforest.owo.ui.container.FlowLayout
 import io.wispforest.owo.ui.container.GridLayout
-import io.wispforest.owo.ui.core.Component
 import io.wispforest.owo.ui.core.Sizing
-import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.item.ItemStack
+
+typealias UiComponent = io.wispforest.owo.ui.core.Component
+typealias TextComponent = net.minecraft.network.chat.Component
 
 // Flows
 
@@ -51,7 +52,7 @@ fun FlowLayout.grid(
 	this.child(Containers.grid(horizontalSizing, verticalSizing, rows, columns).apply(block))
 }
 
-fun GridLayout.gridChild(row: Int, column: Int, child: Component) {
+fun GridLayout.gridChild(row: Int, column: Int, child: UiComponent) {
 	this.child(child, row, column)
 }
 
@@ -65,7 +66,7 @@ fun FlowLayout.box(
 	this.child(Components.box(horizontalSizing, verticalSizing).apply(block))
 }
 
-fun FlowLayout.button(text: Text, onPress: (ButtonComponent) -> Unit, block: ButtonComponent.() -> Unit = {}) {
+fun FlowLayout.button(text: TextComponent, onPress: (ButtonComponent) -> Unit, block: ButtonComponent.() -> Unit = {}) {
 	this.child(
 		object : ButtonComponent(text, onPress) {
 			override fun shouldDrawTooltip(mouseX: Double, mouseY: Double): Boolean =
@@ -74,16 +75,16 @@ fun FlowLayout.button(text: Text, onPress: (ButtonComponent) -> Unit, block: But
 	)
 }
 
-fun labelComponent(text: Text, block: LabelComponent.() -> Unit = {}): LabelComponent =
+fun labelComponent(text: TextComponent, block: LabelComponent.() -> Unit = {}): LabelComponent =
 	Components.label(text).apply { shadow(true) }.apply(block)
 
-fun FlowLayout.label(text: Text, block: LabelComponent.() -> Unit = {}) {
+fun FlowLayout.label(text: TextComponent, block: LabelComponent.() -> Unit = {}) {
 	this.child(labelComponent(text, block))
 }
 
 fun <T> FlowLayout.label(
 	property: SyncedProperty<T>,
-	textFactory: (T) -> Text,
+	textFactory: (T) -> TextComponent,
 	block: LabelComponent.() -> Unit = {}
 ) {
 	this.child(labelComponent(textFactory(property.get())) {
@@ -101,7 +102,7 @@ fun FlowLayout.textBox(horizontalSizing: Sizing = Sizing.content(), block: TextB
 	this.child(textBoxComponent(horizontalSizing, block))
 }
 
-fun FlowLayout.texture(texture: Identifier, width: Int, height: Int, block: TextureComponent.() -> Unit = {}) {
+fun FlowLayout.texture(texture: ResourceLocation, width: Int, height: Int, block: TextureComponent.() -> Unit = {}) {
 	this.child(Components.texture(texture, 0, 0, width, height, width, height).apply(block))
 }
 
@@ -119,6 +120,6 @@ fun FlowLayout.item(stackProperty: SyncedProperty<ItemStack>, block: ItemCompone
 	})
 }
 
-fun Component.tooltip(vararg text: String) {
-	this.tooltip(text.map { Text.of(it) })
+fun UiComponent.tooltip(vararg text: String) {
+	this.tooltip(text.map { TextComponent.nullToEmpty(it) })
 }

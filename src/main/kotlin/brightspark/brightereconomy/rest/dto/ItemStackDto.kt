@@ -3,10 +3,10 @@ package brightspark.brightereconomy.rest.dto
 import brightspark.brightereconomy.persistance.LocalisedNameStorage
 import brightspark.brightereconomy.util.toDto
 import kotlinx.serialization.Serializable
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.enchantment.EnchantmentHelper
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.item.enchantment.EnchantmentHelper
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
 
 @Serializable
 data class ItemStackDto(
@@ -19,15 +19,15 @@ data class ItemStackDto(
 ) {
 	companion object {
 		fun fromItemStack(stack: ItemStack): ItemStackDto {
-			val id = Registries.ITEM.getId(stack.item)
+			val id = BuiltInRegistries.ITEM.getKey(stack.item)
 			return ItemStackDto(
 				item = id.toString(),
 				count = stack.count,
 				name = LocalisedNameStorage.getStorage().getItemName(id),
-				customName = stack.get(DataComponentTypes.CUSTOM_NAME)?.string,
-				enchantments = EnchantmentHelper.getEnchantments(stack)
-					.let { itemEnchants -> itemEnchants.enchantments.map { it.toDto(itemEnchants.getLevel(it)) } },
-				lore = stack.get(DataComponentTypes.LORE)?.lines?.joinToString("\n") { it.string }
+				customName = stack.get(DataComponents.CUSTOM_NAME)?.string,
+				enchantments = EnchantmentHelper.getEnchantmentsForCrafting(stack)
+					.let { itemEnchants -> itemEnchants.keySet().map { it.toDto(itemEnchants.getLevel(it)) } },
+				lore = stack.get(DataComponents.LORE)?.lines?.joinToString("\n") { it.string }
 			)
 		}
 	}

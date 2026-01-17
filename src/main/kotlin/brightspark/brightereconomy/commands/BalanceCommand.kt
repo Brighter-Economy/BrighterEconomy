@@ -9,9 +9,9 @@ import brightspark.brightereconomy.util.Util
 import com.mojang.brigadier.arguments.LongArgumentType
 import com.mojang.brigadier.arguments.LongArgumentType.longArg
 import com.mojang.brigadier.context.CommandContext
-import net.minecraft.server.command.ServerCommandSource
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.commands.CommandSourceStack
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
 
 object BalanceCommand : Command("balance", {
 	requiresPermission("balance", PermissionLevel.ALL)
@@ -49,59 +49,59 @@ object BalanceCommand : Command("balance", {
 		aliases("bal", "money")
 	}
 
-	private fun balance(ctx: CommandContext<ServerCommandSource>, player: PlayerProfileAndAccount? = null): Int {
+	private fun balance(ctx: CommandContext<CommandSourceStack>, player: PlayerProfileAndAccount? = null): Int {
 		val profile = player?.profile
 		val targetIsSelf = profile?.id?.equals(ctx.source.player?.id) ?: true
 		return ctx.source.player?.let { playerEntity ->
 			val account = EconomyService.getAccount(playerEntity.uuid)
 			val money = Util.formatMoney(account.money)
 			val textString = "${if (!targetIsSelf) "${profile.name}'s " else ""}Balance: $money"
-			var text = Text.literal(textString)
+			var text = Component.literal(textString)
 			if (account.locked)
-				text = text.append(Text.literal(" [locked]").styled { it.withColor(Formatting.RED) })
+				text = text.append(Component.literal(" [locked]").withStyle { it.withColor(ChatFormatting.RED) })
 
-			ctx.source.sendMessage(text)
+			ctx.source.sendSystemMessage(text)
 			1
 		} ?: run {
-			ctx.source.sendError(Text.of("Cannot get balance of non-player"))
+			ctx.source.sendFailure(Component.nullToEmpty("Cannot get balance of non-player"))
 			0
 		}
 	}
 
-	private fun modifyBalance(ctx: CommandContext<ServerCommandSource>, add: Boolean): Int {
+	private fun modifyBalance(ctx: CommandContext<CommandSourceStack>, add: Boolean): Int {
 		val player = PlayerAccountArgumentType.get(ctx, "player")
 		val playerId = player.profile.id
 		val playerName = player.profile.name
 		val amount = LongArgumentType.getLong(ctx, "amount")
-		val result = EconomyService.modify(playerId, add, amount, ctx.source.name)
+		val result = EconomyService.modify(playerId, add, amount, ctx.source.textName)
 
 		val amountFormatted = Util.formatMoney(amount)
 		if (result == TransactionExchangeResult.SUCCESS) {
 			if (add)
-				ctx.source.sendMessage(Text.of("Added $amountFormatted to $playerName"))
+				ctx.source.sendSystemMessage(Component.nullToEmpty("Added $amountFormatted to $playerName"))
 			else
-				ctx.source.sendMessage(Text.of("Removed $amountFormatted from $playerName"))
+				ctx.source.sendSystemMessage(Component.nullToEmpty("Removed $amountFormatted from $playerName"))
 			return 1
 		} else {
 			if (add)
-				ctx.source.sendMessage(
-					Text.literal("Failed to add $amountFormatted to $playerName due to ")
+				ctx.source.sendSystemMessage(
+					Component.literal("Failed to add $amountFormatted to $playerName due to ")
 						.append(result.text)
 				)
 			else
-				ctx.source.sendMessage(
-					Text.literal("Failed to remove $amountFormatted from $playerName due to $result")
+				ctx.source.sendSystemMessage(
+					Component.literal("Failed to remove $amountFormatted from $playerName due to $result")
 						.append(result.text)
 				)
 			return 0
 		}
 	}
 
-	private fun setBalance(ctx: CommandContext<ServerCommandSource>): Int {
+	private fun setBalance(ctx: CommandContext<CommandSourceStack>): Int {
 		val player = PlayerAccountArgumentType.get(ctx, "player")
 		val amount = LongArgumentType.getLong(ctx, "amount")
-		EconomyService.set(player.profile.id, amount, ctx.source.name)
-		ctx.source.sendMessage(Text.of("Set ${Util.formatMoney(amount)} to ${player.profile.name}"))
+		EconomyService.set(player.profile.id, amount, ctx.source.textName)
+		ctx.source.sendSystemMessage(Component.nullToEmpty("Set ${Util.formatMoney(amount)} to ${player.profile.name}"))
 		return 1
 	}
 }

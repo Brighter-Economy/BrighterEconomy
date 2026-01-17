@@ -7,18 +7,18 @@ import com.mojang.brigadier.arguments.ArgumentType
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
-import net.minecraft.command.argument.EntityArgumentType
-import net.minecraft.server.command.ServerCommandSource
-import net.minecraft.util.Identifier
+import net.minecraft.commands.arguments.EntityArgument
+import net.minecraft.commands.CommandSourceStack
+import net.minecraft.resources.ResourceLocation
 import java.util.concurrent.CompletableFuture
 
 class PlayerProfileArgumentType : ArgumentType<PlayerProfileArg> {
 	companion object {
-		val ID = Identifier.of(BrighterEconomy.MOD_ID, "player_profile")
+		val ID = ResourceLocation.fromNamespaceAndPath(BrighterEconomy.MOD_ID, "player_profile")
 
 		fun playerProfileArg() = PlayerProfileArgumentType()
 
-		fun get(context: CommandContext<ServerCommandSource>, name: String): GameProfile =
+		fun get(context: CommandContext<CommandSourceStack>, name: String): GameProfile =
 			context.getArgument(name, PlayerProfileArg::class.java).get(context.source)
 	}
 
@@ -30,8 +30,8 @@ class PlayerProfileArgumentType : ArgumentType<PlayerProfileArg> {
 
 		val string = reader.string.substring(cursorStart, reader.cursor)
 		return PlayerProfileArg { source ->
-			source.server.userCache!!.findByName(string)
-				.orElseThrow { EntityArgumentType.PLAYER_NOT_FOUND_EXCEPTION.createWithContext(reader) }
+			source.server.profileCache!!.get(string)
+				.orElseThrow { EntityArgument.NO_PLAYERS_FOUND.createWithContext(reader) }
 		}
 	}
 

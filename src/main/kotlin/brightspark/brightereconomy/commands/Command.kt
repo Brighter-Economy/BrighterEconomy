@@ -8,14 +8,14 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.builder.RequiredArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.tree.LiteralCommandNode
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.server.command.CommandManager
-import net.minecraft.server.command.ServerCommandSource
+import net.minecraft.world.entity.player.Player
+import net.minecraft.commands.Commands
+import net.minecraft.commands.CommandSourceStack
 import java.util.*
 
 abstract class Command(
 	name: String,
-	builderBlock: LiteralArgumentBuilder<ServerCommandSource>.() -> Unit
+	builderBlock: LiteralArgumentBuilder<CommandSourceStack>.() -> Unit
 ) {
 	companion object {
 		private const val COMMAND_PERM = "command.${BrighterEconomy.MOD_ID}"
@@ -29,47 +29,47 @@ abstract class Command(
 		 */
 		fun buildRedirect(
 			alias: String,
-			destination: LiteralCommandNode<ServerCommandSource>
-		): LiteralCommandNode<ServerCommandSource> =
-			LiteralArgumentBuilder.literal<ServerCommandSource>(alias)
+			destination: LiteralCommandNode<CommandSourceStack>
+		): LiteralCommandNode<CommandSourceStack> =
+			LiteralArgumentBuilder.literal<CommandSourceStack>(alias)
 				.requires(destination.requirement)
 				.forward(destination.redirect, destination.redirectModifier, destination.isFork)
 				.executes(destination.command)
 				.apply { destination.children.forEach { then(it) } }
 				.build()
 
-		fun <T : ArgumentBuilder<ServerCommandSource, T>> T.thenLiteral(
+		fun <T : ArgumentBuilder<CommandSourceStack, T>> T.thenLiteral(
 			name: String,
-			block: LiteralArgumentBuilder<ServerCommandSource>.() -> Unit
-		): T = this.then(CommandManager.literal(name).apply(block))
+			block: LiteralArgumentBuilder<CommandSourceStack>.() -> Unit
+		): T = this.then(Commands.literal(name).apply(block))
 
-		fun <T : ArgumentBuilder<ServerCommandSource, T>, ARG> T.thenArgument(
+		fun <T : ArgumentBuilder<CommandSourceStack, T>, ARG> T.thenArgument(
 			argumentName: String,
 			argument: ArgumentType<ARG>,
-			block: RequiredArgumentBuilder<ServerCommandSource, ARG>.() -> Unit
-		): T = this.then(CommandManager.argument(argumentName, argument).apply(block))
+			block: RequiredArgumentBuilder<CommandSourceStack, ARG>.() -> Unit
+		): T = this.then(Commands.argument(argumentName, argument).apply(block))
 
-		fun <T : ArgumentBuilder<ServerCommandSource, T>> T.thenCommand(command: Command) {
+		fun <T : ArgumentBuilder<CommandSourceStack, T>> T.thenCommand(command: Command) {
 			val node = command.builder.build()
 			this.then(node)
 			command.aliases.forEach { this.then(buildRedirect(it, node)) }
 		}
 
-		fun <T : ArgumentBuilder<ServerCommandSource, T>> T.requiresPermission(permissionLevel: PermissionLevel): T =
+		fun <T : ArgumentBuilder<CommandSourceStack, T>> T.requiresPermission(permissionLevel: PermissionLevel): T =
 			this.requires(Permissions.require(COMMAND_PERM, permissionLevel.value))
 
-		fun <T : ArgumentBuilder<ServerCommandSource, T>> T.requiresPermission(
+		fun <T : ArgumentBuilder<CommandSourceStack, T>> T.requiresPermission(
 			permission: String,
 			permissionLevel: PermissionLevel
 		): T = this.requires(Permissions.require("$COMMAND_PERM.$permission", permissionLevel.value))
 
-		fun CommandContext<ServerCommandSource>.getPlayer(uuid: UUID): PlayerEntity? =
-			this.source.server.playerManager.getPlayer(uuid)
+		fun CommandContext<CommandSourceStack>.getPlayer(uuid: UUID): Player? =
+			this.source.server.playerList.getPlayer(uuid)
 	}
 
 	protected val aliases: MutableList<String> = mutableListOf()
 
-	val builder: LiteralArgumentBuilder<ServerCommandSource> = CommandManager.literal(name).apply(builderBlock)
+	val builder: LiteralArgumentBuilder<CommandSourceStack> = Commands.literal(name).apply(builderBlock)
 
 	protected fun alias(alias: String) {
 		this.aliases.add(alias)

@@ -3,7 +3,7 @@ package brightspark.brightereconomy.rest.service
 import brightspark.brightereconomy.BrighterEconomy
 import brightspark.brightereconomy.economy.EconomyService
 import brightspark.brightereconomy.rest.dto.PlayerAccountDto
-import net.minecraft.util.UserCache
+import net.minecraft.server.players.GameProfileCache
 import java.util.*
 
 object AccountService {
@@ -24,9 +24,9 @@ object AccountService {
 		EconomyService.set(uuid, money, loginUsername)
 	}
 
-	private fun getUserCache(): Optional<UserCache> =
-		Optional.ofNullable(BrighterEconomy.SERVER.get().userCache)
+	private fun getUserCache(): Optional<GameProfileCache> =
+		Optional.ofNullable(BrighterEconomy.SERVER.get().profileCache)
 
-	private fun Optional<UserCache>.getUsername(uuid: UUID): String =
-		this.flatMap { it.getByUuid(uuid) }.map { it.name }.orElse("")
+	private fun Optional<GameProfileCache>.getUsername(uuid: UUID): String =
+		this.flatMap { it.get(uuid) }.map { it.name }.orElse("")
 }
